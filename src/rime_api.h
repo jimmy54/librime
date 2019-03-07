@@ -259,11 +259,12 @@ RIME_API Bool RimeGetStatus(RimeSessionId session_id, RimeStatus* status);
 RIME_API Bool RimeFreeStatus(RimeStatus* status);
 
 // Accessing candidate list
-RIME_API Bool RimeCandidateListBeginWithIndex(int index, RimeSessionId session_id,
-                                                  RimeCandidateListIterator* iterator);
 RIME_API Bool RimeCandidateListBegin(RimeSessionId session_id, RimeCandidateListIterator* iterator);
 RIME_API Bool RimeCandidateListNext(RimeCandidateListIterator* iterator);
 RIME_API void RimeCandidateListEnd(RimeCandidateListIterator* iterator);
+RIME_API Bool RimeCandidateListFromIndex(RimeSessionId session_id,
+                                         RimeCandidateListIterator* iterator,
+                                         int index);
 
 // Runtime options
 
@@ -527,6 +528,9 @@ typedef struct rime_api_t {
   
   Bool (*import_user_dict)(const char *schema_id, const char *dict_file);
 
+  Bool (*candidate_list_from_index)(RimeSessionId session_id,
+                                    RimeCandidateListIterator* iterator,
+                                    int index);
 } RimeApi;
 
 //! API entry

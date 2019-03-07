@@ -4,6 +4,7 @@
 //
 // 2012-01-17 GONG Chen <chen.sst@gmail.com>
 //
+#include <cmath>
 #include <gtest/gtest.h>
 #include <rime/common.h>
 #include <rime/algo/calculus.h>
@@ -74,5 +75,5 @@ TEST(RimeCalculusTest, Abbreviation) {
   EXPECT_TRUE(c->Apply(&s));
   EXPECT_EQ("sh", s.str);
   EXPECT_EQ(rime::kAbbreviation, s.properties.type);
-  EXPECT_GT(0.5001, s.properties.credibility);
+  EXPECT_DOUBLE_EQ(log(0.5), s.properties.credibility);
 }

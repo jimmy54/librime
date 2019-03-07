@@ -7,6 +7,7 @@
 #ifndef RIME_DICTIONARY_H_
 #define RIME_DICTIONARY_H_
 
+#include <rime_api.h>
 #include <rime/common.h>
 #include <rime/component.h>
 #include <rime/dict/prism.h>
@@ -23,14 +24,14 @@ struct Chunk {
   size_t size = 0;
   size_t cursor = 0;
   string remaining_code;  // for predictive queries
-  double credibility = 1.0;
+  double credibility = 0.0;
 
   Chunk() = default;
-  Chunk(const Code& c, const table::Entry* e, double cr = 1.0)
+  Chunk(const Code& c, const table::Entry* e, double cr = 0.0)
       : code(c), entries(e), size(1), cursor(0), credibility(cr) {}
-  Chunk(const TableAccessor& a, double cr = 1.0)
+  Chunk(const TableAccessor& a, double cr = 0.0)
       : Chunk(a, string(), cr) {}
-  Chunk(const TableAccessor& a, const string& r, double cr = 1.0)
+  Chunk(const TableAccessor& a, const string& r, double cr = 0.0)
       : code(a.index_code()), entries(a.entry()),
         size(a.remaining()), cursor(0), remaining_code(r), credibility(cr) {}
 };
@@ -39,30 +40,30 @@ bool compare_chunk_by_leading_element(const Chunk& a, const Chunk& b);
 
 }  // namespace dictionary
 
-class DictEntryIterator : protected list<dictionary::Chunk>,
-                          public DictEntryFilterBinder {
+class DictEntryIterator : public DictEntryFilterBinder {
  public:
-  using Base = list<dictionary::Chunk>;
-
-  RIME_API DictEntryIterator();
-  RIME_API DictEntryIterator(const DictEntryIterator& other);
-  DictEntryIterator& operator= (DictEntryIterator& other);
+  DictEntryIterator() = default;
+  DictEntryIterator(DictEntryIterator&& other) = default;
+  DictEntryIterator& operator= (DictEntryIterator&& other) = default;
 
   void AddChunk(dictionary::Chunk&& chunk, Table* table);
   void Sort();
+  RIME_API void AddFilter(DictEntryFilter filter) override;
   RIME_API an<DictEntry> Peek();
   RIME_API bool Next();
   bool Skip(size_t num_entries);
-  RIME_API bool exhausted() const;
+  bool exhausted() const { return chunk_index_ >= chunks_.size(); }
   size_t entry_count() const { return entry_count_; }
 
  protected:
-  void PrepareEntry();
+  bool FindNextEntry();
 
  private:
-  Table* table_;
-  an<DictEntry> entry_;
-  size_t entry_count_;
+  vector<dictionary::Chunk> chunks_;
+  size_t chunk_index_ = 0;
+  Table* table_ = nullptr;
+  an<DictEntry> entry_ = nullptr;
+  size_t entry_count_ = 0;
 };
 
 struct DictEntryCollector : map<size_t, DictEntryIterator> {
@@ -87,7 +88,7 @@ class Dictionary : public Class<Dictionary, const Ticket&> {
 
   RIME_API an<DictEntryCollector> Lookup(const SyllableGraph& syllable_graph,
                                          size_t start_pos,
-                                         double initial_credibility = 1.0);
+                                         double initial_credibility = 0.0);
   // if predictive is true, do an expand search with limit,
   // otherwise do an exact match.
   // return num of matching keys.

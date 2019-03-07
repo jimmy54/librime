@@ -56,8 +56,8 @@ class TableTranslation : public Translation {
                    size_t start,
                    size_t end,
                    const string& preedit,
-                   const DictEntryIterator& iter = DictEntryIterator(),
-                   const UserDictEntryIterator& uter = UserDictEntryIterator());
+                   DictEntryIterator&& iter = {},
+                   UserDictEntryIterator&& uter = {});
 
   virtual bool Next();
   virtual an<Candidate> Peek();
@@ -69,7 +69,7 @@ class TableTranslation : public Translation {
   bool CheckEmpty();
   bool PreferUserPhrase();
 
-  an<DictEntry> PreferedEntry(bool prefer_user_phrase) {
+  an<DictEntry> PreferredEntry(bool prefer_user_phrase) {
     return prefer_user_phrase ? uter_.Peek() : iter_.Peek();
   }
 
