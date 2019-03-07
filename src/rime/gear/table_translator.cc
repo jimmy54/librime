@@ -33,11 +33,11 @@ TableTranslation::TableTranslation(TranslatorOptions* options,
                                    size_t start,
                                    size_t end,
                                    const string& preedit,
-                                   const DictEntryIterator& iter,
-                                   const UserDictEntryIterator& uter)
+                                   DictEntryIterator&& iter,
+                                   UserDictEntryIterator&& uter)
     : options_(options), language_(language),
       input_(input), start_(start), end_(end), preedit_(preedit),
-      iter_(iter), uter_(uter) {
+      iter_(std::move(iter)), uter_(std::move(uter)) {
   if (options_)
     options_->preedit_formatter().Apply(&preedit_);
   CheckEmpty();
@@ -67,7 +67,7 @@ an<Candidate> TableTranslation::Peek() {
   if (exhausted())
     return nullptr;
   bool is_user_phrase = PreferUserPhrase();
-  auto e = PreferedEntry(is_user_phrase);
+  auto e = PreferredEntry(is_user_phrase);
   string comment(is_constructed(e.get()) ? kUnitySymbol : e->comment);
   if (options_) {
     options_->comment_formatter().Apply(&comment);
@@ -80,7 +80,7 @@ an<Candidate> TableTranslation::Peek() {
     phrase->set_comment(comment);
     phrase->set_preedit(preedit_);
     bool incomplete = e->remaining_code_length != 0;
-    phrase->set_quality(e->weight +
+    phrase->set_quality(exp(e->weight) +
                         options_->initial_quality() +
                         (incomplete ? -1 : 0) +
                         (is_user_phrase ? 0.5 : 0));
@@ -190,7 +190,7 @@ bool LazyTableTranslation::FetchMoreTableEntries() {
   }
   if (more.entry_count() > previous_entry_count) {
     more.Skip(previous_entry_count);
-    iter_ = more;
+    iter_ = std::move(more);
   }
   return true;
 }
@@ -276,8 +276,8 @@ an<Translation> TableTranslator::Query(const string& input,
           segment.start,
           segment.start + input.length(),
           preedit,
-          iter,
-          uter);
+          std::move(iter),
+          std::move(uter));
   }
   if (translation) {
     bool filter_by_charset = enable_charset_filter_ &&
@@ -380,9 +380,9 @@ Spans SentenceSyllabifier::Syllabify(const Phrase* phrase) {
 class SentenceTranslation : public Translation {
  public:
   SentenceTranslation(TableTranslator* translator,
-                      an<Sentence> sentence,
-                      DictEntryCollector* collector,
-                      UserDictEntryCollector* ucollector,
+                      an<Sentence>&& sentence,
+                      DictEntryCollector&& collector,
+                      UserDictEntryCollector&& ucollector,
                       const string& input,
                       size_t start);
   virtual bool Next();
@@ -403,17 +403,17 @@ class SentenceTranslation : public Translation {
 };
 
 SentenceTranslation::SentenceTranslation(TableTranslator* translator,
-                                         an<Sentence> sentence,
-                                         DictEntryCollector* collector,
-                                         UserDictEntryCollector* ucollector,
+                                         an<Sentence>&& sentence,
+                                         DictEntryCollector&& collector,
+                                         UserDictEntryCollector&& ucollector,
                                          const string& input,
                                          size_t start)
-    : translator_(translator), input_(input), start_(start) {
-  sentence_.swap(sentence);
-  if (collector)
-    collector_.swap(*collector);
-  if (ucollector)
-    user_phrase_collector_.swap(*ucollector);
+    : translator_(translator),
+      sentence_(std::move(sentence)),
+      collector_(std::move(collector)),
+      user_phrase_collector_(std::move(ucollector)),
+      input_(input),
+      start_(start) {
   PrepareSentence();
   CheckEmpty();
 }
@@ -559,12 +559,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
         if (filter_by_charset) {
           uter.AddFilter(CharsetFilter::FilterDictEntry);
         }
-        entries[consumed_length] = uter.Peek();
-        if (start_pos == 0 && !uter.exhausted()) {
-          // also provide words for manual composition
-          uter.Release(&user_phrase_collector[consumed_length]);
-          DLOG(INFO) << "user phrase[" << consumed_length << "]: "
-                     << user_phrase_collector[consumed_length].size();
+        if (!uter.exhausted()) {
+          entries[consumed_length] = uter.Peek();
+          if (start_pos == 0) {
+            // also provide words for manual composition
+            uter.Release(&user_phrase_collector[consumed_length]);
+            DLOG(INFO) << "user phrase[" << consumed_length << "]: "
+                       << user_phrase_collector[consumed_length].size();
+          }
         }
         if (resume_key > active_key &&
             !boost::starts_with(resume_key, active_key))
@@ -586,12 +588,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
         if (filter_by_charset) {
           uter.AddFilter(CharsetFilter::FilterDictEntry);
         }
-        entries[consumed_length] = uter.Peek();
-        if (start_pos == 0 && !uter.exhausted()) {
-          // also provide words for manual composition
-          uter.Release(&user_phrase_collector[consumed_length]);
-          DLOG(INFO) << "unity phrase[" << consumed_length << "]: "
-                     << user_phrase_collector[consumed_length].size();
+        if (!uter.exhausted()) {
+          entries[consumed_length] = uter.Peek();
+          if (start_pos == 0) {
+            // also provide words for manual composition
+            uter.Release(&user_phrase_collector[consumed_length]);
+            DLOG(INFO) << "unity phrase[" << consumed_length << "]: "
+                       << user_phrase_collector[consumed_length].size();
+          }
         }
         if (resume_key > active_key &&
             !boost::starts_with(resume_key, active_key))
@@ -615,12 +619,14 @@ TableTranslator::MakeSentence(const string& input, size_t start,
         if (filter_by_charset) {
           iter.AddFilter(CharsetFilter::FilterDictEntry);
         }
-        entries[consumed_length] = iter.Peek();
-        if (start_pos == 0 && !iter.exhausted()) {
-          // also provide words for manual composition
-          collector[consumed_length] = iter;
-          DLOG(INFO) << "table[" << consumed_length << "]: "
-                     << collector[consumed_length].entry_count();
+        if (!iter.exhausted()) {
+          entries[consumed_length] = iter.Peek();
+          if (start_pos == 0) {
+            // also provide words for manual composition
+            collector[consumed_length] = std::move(iter);
+            DLOG(INFO) << "table[" << consumed_length << "]: "
+                       << collector[consumed_length].entry_count();
+          }
         }
       }
     }
@@ -634,7 +640,7 @@ TableTranslator::MakeSentence(const string& input, size_t start,
       // compare and update sentences
       if (sentences.find(end_pos) == sentences.end() ||
           sentences[end_pos]->weight() <= new_sentence->weight()) {
-        sentences[end_pos] = new_sentence;
+        sentences[end_pos] = std::move(new_sentence);
       }
     }
   }
@@ -642,9 +648,9 @@ TableTranslator::MakeSentence(const string& input, size_t start,
   if (sentences.find(input.length()) != sentences.end()) {
     result = Cached<SentenceTranslation>(
         this,
-        sentences[input.length()],
-        include_prefix_phrases ? &collector : NULL,
-        include_prefix_phrases ? &user_phrase_collector : NULL,
+        std::move(sentences[input.length()]),
+        include_prefix_phrases ? std::move(collector) : DictEntryCollector(),
+        include_prefix_phrases ? std::move(user_phrase_collector) : UserDictEntryCollector(),
         input,
         start);
     if (result && filter_by_charset) {

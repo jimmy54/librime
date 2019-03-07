@@ -9,6 +9,7 @@
 #define RIME_VOCABULARY_H_
 
 #include <stdint.h>
+#include <rime_api.h>
 #include <rime/common.h>
 
 namespace rime {
@@ -53,7 +54,8 @@ using DictEntryFilter = function<bool (an<DictEntry> entry)>;
 
 class DictEntryFilterBinder {
  public:
-  void AddFilter(DictEntryFilter filter);
+  virtual ~DictEntryFilterBinder() = default;
+  RIME_API virtual void AddFilter(DictEntryFilter filter);
 
  protected:
   DictEntryFilter filter_;
