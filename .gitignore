@@ -1,14 +1,13 @@
 build/
 build-static/
-debug-build/
-xbuild/
-xdebug/
+debug/
+dist/
 build.log
 data/*
 thirdparty/include/*
 thirdparty/lib/*
 thirdparty/bin/*
-thirdparty/data/*
+thirdparty/share/*
 thirdparty/src/*/*
 env.bat
 node_modules/

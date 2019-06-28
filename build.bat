@@ -30,19 +30,16 @@ echo.
 
 if not defined BJAM_TOOLSET (
   rem the number actually means platform toolset, not %VisualStudioVersion%
-  set BJAM_TOOLSET=msvc-14.0
+  set BJAM_TOOLSET=msvc-14.1
 )
 
 if not defined CMAKE_GENERATOR (
-  set CMAKE_GENERATOR="Visual Studio 14 2015"
+  set CMAKE_GENERATOR="Visual Studio 15 2017"
 )
 
 if not defined PLATFORM_TOOLSET (
-  set PLATFORM_TOOLSET=v140_xp
+  set PLATFORM_TOOLSET=v141_xp
 )
-
-rem used when building marisa
-set VS_LATEST=vs2015
 
 set build=build
 set build_boost=0
@@ -83,7 +80,8 @@ shift
 goto parse_cmdline_options
 :end_parsing_cmdline_options
 
-set THIRDPARTY="%RIME_ROOT%"\thirdparty
+set DIST_DIR=%RIME_ROOT%\dist
+set THIRDPARTY=%RIME_ROOT%\thirdparty
 
 rem set CURL=%THIRDPARTY%\bin\curl.exe
 rem set DOWNLOAD="%CURL%" --remote-name-all
@@ -113,142 +111,115 @@ set BJAM_OPTIONS_X64=%BJAM_OPTIONS_COMMON%^
 if %build_boost% == 1 (
   cd /d %BOOST_ROOT%
   if not exist bjam.exe call bootstrap.bat
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 
   bjam %BJAM_OPTIONS_X86% stage %BOOST_COMPILED_LIBS%
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  if errorlevel 1 goto error
 
   if %build_boost_x64% == 1 (
     bjam %BJAM_OPTIONS_X64% stage %BOOST_COMPILED_LIBS%
-    if %ERRORLEVEL% NEQ 0 goto ERROR
+    if errorlevel 1 goto error
   )
 )
+
+set THIRDPARTY_COMMON_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
+ -T%PLATFORM_TOOLSET%^
+ -DCMAKE_CONFIGURATION_TYPES:STRING="Release"^
+ -DCMAKE_CXX_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
+ -DCMAKE_C_FLAGS_RELEASE:STRING="/MT /O2 /Ob2 /DNDEBUG"^
+ -DCMAKE_INSTALL_PREFIX:PATH="%THIRDPARTY%"
 
 if %build_thirdparty% == 1 (
   cd /d %THIRDPARTY%
 
   echo building glog.
   cd %THIRDPARTY%\src\glog
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DWITH_GFLAGS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target glog
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y src\windows\glog %THIRDPARTY%\include\glog\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\Release\glog.lib %THIRDPARTY%\lib\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  cmake . -Bcmake-build %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  -DBUILD_TESTING:BOOL=OFF^
+  -DWITH_GFLAGS:BOOL=OFF
+  if errorlevel 1 goto error
+  cmake --build cmake-build --config Release --target INSTALL
+  if errorlevel 1 goto error
 
   echo building leveldb.
-  cd %THIRDPARTY%\src\leveldb-windows
-  echo BOOST_ROOT=%BOOST_ROOT%
-  msbuild.exe leveldb.sln /p:Configuration=Release /p:Platform=Win32
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y include\leveldb %THIRDPARTY%\include\leveldb\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\leveldb.lib %THIRDPARTY%\lib\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  cd %THIRDPARTY%\src\leveldb
+  cmake . -Bbuild %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  -DLEVELDB_BUILD_BENCHMARKS:BOOL=OFF^
+  -DLEVELDB_BUILD_TESTS:BOOL=OFF
+  if errorlevel 1 goto error
+  cmake --build build --config Release --target INSTALL
+  if errorlevel 1 goto error
 
   echo building yaml-cpp.
   cd %THIRDPARTY%\src\yaml-cpp
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DMSVC_SHARED_RT=OFF -DYAML_CPP_BUILD_TOOLS=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target yaml-cpp
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y include\yaml-cpp %THIRDPARTY%\include\yaml-cpp\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\Release\libyaml-cppmt.lib %THIRDPARTY%\lib\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  cmake . -Bbuild %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  -DMSVC_SHARED_RT:BOOL=OFF^
+  -DYAML_CPP_BUILD_CONTRIB:BOOL=OFF^
+  -DYAML_CPP_BUILD_TESTS:BOOL=OFF^
+  -DYAML_CPP_BUILD_TOOLS:BOOL=OFF
+  if errorlevel 1 goto error
+  cmake --build build --config Release --target INSTALL
+  if errorlevel 1 goto error
 
   echo building gtest.
-  cd %THIRDPARTY%\src\gtest
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y include\gtest %THIRDPARTY%\include\gtest\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\Release\gtest*.lib %THIRDPARTY%\lib\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  cd %THIRDPARTY%\src\googletest
+  cmake . -Bbuild %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  -DBUILD_GMOCK:BOOL=OFF
+  if errorlevel 1 goto error
+  cmake --build build --config Release --target INSTALL
+  if errorlevel 1 goto error
 
   echo building marisa.
-  cd %THIRDPARTY%\src\marisa-trie\%VS_LATEST%
-  msbuild.exe %VS_LATEST%.sln /p:Configuration=Release /p:Platform=Win32
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  xcopy /S /I /Y ..\lib\marisa %THIRDPARTY%\include\marisa\
-  xcopy /Y ..\lib\marisa.h %THIRDPARTY%\include\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\libmarisa.lib %THIRDPARTY%\lib\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y Release\marisa-*.exe %THIRDPARTY%\bin\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  cd %THIRDPARTY%\src\marisa-trie
+  cmake %THIRDPARTY%\src -Bbuild %THIRDPARTY_COMMON_CMAKE_FLAGS%
+  if errorlevel 1 goto error
+  cmake --build build --config Release --target INSTALL
+  if errorlevel 1 goto error
 
   echo building opencc.
   cd %THIRDPARTY%\src\opencc
-  cmake . -Bbuild -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% -DCMAKE_INSTALL_PREFIX="" -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DCMAKE_CONFIGURATION_TYPES="Release" -DCMAKE_CXX_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG"
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target libopencc
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target opencc
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target opencc_dict
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  cmake --build build --config Release --target Dictionaries
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  echo built. copying artifacts.
-  if not exist %THIRDPARTY%\include\opencc mkdir %THIRDPARTY%\include\opencc
-  copy /Y src\*.h* %THIRDPARTY%\include\opencc\
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\src\Release\opencc.lib %THIRDPARTY%\lib
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  copy /Y build\src\tools\Release\opencc.exe %THIRDPARTY%\bin
-  copy /Y build\src\tools\Release\opencc_dict.exe %THIRDPARTY%\bin
-  if %ERRORLEVEL% NEQ 0 goto ERROR
-  if not exist %THIRDPARTY%\data\opencc mkdir %THIRDPARTY%\data\opencc
-  copy /Y data\config\*.json %THIRDPARTY%\data\opencc
-  copy /Y build\data\*.ocd %THIRDPARTY%\data\opencc
-  if %ERRORLEVEL% NEQ 0 goto ERROR
+  cmake . -Bbuild %THIRDPARTY_COMMON_CMAKE_FLAGS%^
+  -DBUILD_SHARED_LIBS=OFF^
+  -DBUILD_TESTING=OFF
+  if errorlevel 1 goto error
+  cmake --build build --config Release --target INSTALL
+  if errorlevel 1 goto error
 )
 
-if %build_librime% == 0 goto EXIT
+if %build_librime% == 0 goto exit
 
-set RIME_CMAKE_FLAGS=-DBUILD_STATIC=ON^
+set RIME_CMAKE_FLAGS=-G%CMAKE_GENERATOR%^
+ -T%PLATFORM_TOOLSET%^
+ -DBUILD_STATIC=ON^
  -DBUILD_SHARED_LIBS=%build_shared%^
  -DBUILD_TEST=%build_test%^
  -DENABLE_LOGGING=%enable_logging%^
  -DBOOST_USE_CXX11=ON^
- -DCMAKE_CONFIGURATION_TYPES="Release"
+ -DCMAKE_CONFIGURATION_TYPES="Release"^
+ -DCMAKE_INSTALL_PREFIX:PATH="%DIST_DIR%"
 
 cd /d %RIME_ROOT%
-echo cmake %RIME_ROOT% -B%build% -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% %RIME_CMAKE_FLAGS%
-call cmake %RIME_ROOT% -B%build% -G%CMAKE_GENERATOR% -T%PLATFORM_TOOLSET% %RIME_CMAKE_FLAGS%
-if %ERRORLEVEL% NEQ 0 goto ERROR
+echo cmake %RIME_ROOT% -B%build% %RIME_CMAKE_FLAGS%
+call cmake %RIME_ROOT% -B%build% %RIME_CMAKE_FLAGS%
+if errorlevel 1 goto error
 
 echo.
 echo building librime.
-cmake --build build --config Release
-if %ERRORLEVEL% NEQ 0 goto ERROR
-
-mkdir build\include
-copy /y src\*.h build\include
+cmake --build build --config Release --target INSTALL
+if errorlevel 1 goto error
 
 echo.
 echo ready.
 echo.
-goto EXIT
+goto exit
 
-:ERROR
-set EXITCODE=%ERRORLEVEL%
+:error
+set exitcode=%errorlevel%
 echo.
 echo error building la rime.
 echo.
 
-:EXIT
+:exit
 set PATH=%OLD_PATH%
 cd /d %BACK%
-rem pause
-exit /b %EXITCODE%
+exit /b %exitcode%

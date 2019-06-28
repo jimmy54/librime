@@ -4,20 +4,23 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_fla
 project(rime)
 cmake_minimum_required(VERSION 2.8.11)
 
-set(rime_version 1.4.0)
+set(rime_version 1.5.3)
 set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
 
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
+option(BUILD_MERGED_PLUGINS "Merge plugins into one Rime library" ON)
 option(BUILD_STATIC "Build with dependencies as static libraries" OFF)
 option(BUILD_DATA "Build data for Rime" OFF)
+option(BUILD_SAMPLE "Build sample Rime plugin" OFF)
 option(BUILD_TEST "Build and run tests" ON)
-option(BUILD_SEPARATE_LIBS "Build a separate rime-gears library" OFF)
+option(BUILD_SEPARATE_LIBS "Build separate rime-* libraries" OFF)
 option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
 option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
+option(BUILD_WITH_ICU "Build by explicitly linking to ICU libraries" OFF)
 
 set(rime_data_dir "/share/rime-data" CACHE STRING "Target directory for Rime data")
 
@@ -89,6 +92,10 @@ endif()
 
 find_package(Threads)
 
+if (BUILD_WITH_ICU)
+  find_package(ICU COMPONENTS uc)
+endif()
+
 find_package(Iconv)
 if (ICONV_FOUND)
   include_directories(${ICONV_INCLUDE_DIRS})
@@ -142,11 +149,12 @@ if(MSVC)
     # stdint.h is missing from VS2010
     include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include/msvc)
   endif()
-  add_definitions("/wd4244 /wd4996")
+  # Force Boost.Uuid to use wincrypt as random provider instead of bcrypt for Windows XP compatibility
+  add_definitions("/wd4244 /wd4996 /DBOOST_UUID_RANDOM_PROVIDER_FORCE_WINCRYPT")
 endif()
 
 if(UNIX)
-  add_definitions("-std=c++11")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)
@@ -157,15 +165,15 @@ if(NOT DEFINED BIN_INSTALL_DIR)
     set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 endif()
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
-  # uninstall target
-  configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
-  add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+# uninstall target
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+  IMMEDIATE @ONLY)
+add_custom_target(uninstall
+  COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
   set(prefix "${CMAKE_INSTALL_PREFIX}")
   set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
   set(bindir "${exec_prefix}/bin")
@@ -176,28 +184,43 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
       ${PROJECT_SOURCE_DIR}/rime.pc.in
       ${PROJECT_BINARY_DIR}/rime.pc
       @ONLY)
-  file(GLOB installed_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
-  install(FILES ${installed_header_files} DESTINATION include)
-  install(FILES ${PROJECT_BINARY_DIR}/rime.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
-  install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
+  install(FILES ${PROJECT_BINARY_DIR}/rime.pc
+    DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
+endif()
 
-  if(BUILD_DATA)
-    file(GLOB preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
-    install(FILES ${preset_data_files} DESTINATION ${pkgdatadir})
-  endif()
+install(FILES cmake/RimeConfig.cmake DESTINATION share/cmake/rime)
+
+file(GLOB rime_public_header_files ${PROJECT_SOURCE_DIR}/src/*.h)
+install(FILES ${rime_public_header_files} DESTINATION include)
+
+if(BUILD_DATA)
+  file(GLOB rime_preset_data_files ${PROJECT_SOURCE_DIR}/data/preset/*.yaml)
+  install(FILES ${rime_preset_data_files}
+    DESTINATION ${CMAKE_INSTALL_PREFIX}${rime_data_dir})
 endif()
 
 if(BUILD_SHARED_LIBS)
   add_definitions(-DRIME_BUILD_SHARED_LIBS)
   set(rime_library rime)
   if(BUILD_SEPARATE_LIBS)
+    set(rime_dict_library rime-dict)
     set(rime_gears_library rime-gears)
+    set(rime_levers_library rime-levers)
   endif()
 else()
   set(rime_library rime-static)
-  if(BUILD_SEPARATE_LIBS)
-    set(rime_gears_library rime-gears-static)
-  endif()
+endif()
+
+add_subdirectory(plugins)
+message(STATUS "rime_plugins_libs: ${rime_plugins_deps}")
+message(STATUS "rime_plugins_modules: ${rime_plugins_modules}")
+set(list "")
+foreach(mod ${rime_plugins_modules})
+  set(list "${list},Q(${mod})")
+endforeach()
+add_definitions(-DRIME_EXTRA_MODULES=${list})
+if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS AND rime_plugins_objs)
+  set(rime_plugins_library rime-plugins)
 endif()
 
 add_subdirectory(src)
@@ -205,7 +228,11 @@ add_subdirectory(src)
 if(BUILD_SHARED_LIBS)
   add_subdirectory(tools)
 
-  if(GTEST_FOUND)
+  if(BUILD_TEST)
     add_subdirectory(test)
+  endif()
+
+  if (BUILD_SAMPLE)
+    add_subdirectory(sample)
   endif()
 endif()
