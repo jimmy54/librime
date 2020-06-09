@@ -74,6 +74,7 @@ Official:
   - [Weasel](https://github.com/rime/weasel): frontend for Windows
 
 Third-party:
+  - [emacs-rime](https://github.com/DogLooksGood/emacs-rime): frontend for Emacs
   - [fcitx-rime](https://github.com/fcitx/fcitx-rime): Fcitx frontend for Linux
   - [iRime](https://github.com/jimmy54/iRime): frontend for iOS
   - [PIME](https://github.com/EasyIME/PIME): frontend for Windows
@@ -82,6 +83,8 @@ Third-party:
 
 Plugins
 ===
+  - [librime-charcode](https://github.com/rime/librime-charcode) Module that
+    deals with character encoding; depends on boost::locale and ICU libraries
   - [librime-legacy](https://github.com/rime/librime-legacy) Legacy module with
     GPL-licensed code
 

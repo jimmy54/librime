@@ -2,12 +2,14 @@ set(CMAKE_USER_MAKE_RULES_OVERRIDE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/c_flag_over
 set(CMAKE_USER_MAKE_RULES_OVERRIDE_CXX ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cxx_flag_overrides.cmake)
 
 project(rime)
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.0.2)
 
 set(rime_version 1.5.3)
 set(rime_soversion 1)
 
 add_definitions(-DRIME_VERSION="${rime_version}")
+
+include(GNUInstallDirs)
 
 option(BUILD_SHARED_LIBS "Build Rime as shared library" ON)
 option(BUILD_MERGED_PLUGINS "Merge plugins into one Rime library" ON)
@@ -20,7 +22,6 @@ option(ENABLE_LOGGING "Enable logging with google-glog library" ON)
 option(BOOST_USE_CXX11 "Boost has been built with C++11 support" OFF)
 option(BOOST_USE_SIGNALS2 "Boost use signals2 instead of signals" ON)
 option(ENABLE_ASAN "Enable Address Sanitizer (Unix Only)" OFF)
-option(BUILD_WITH_ICU "Build by explicitly linking to ICU libraries" OFF)
 
 set(rime_data_dir "/share/rime-data" CACHE STRING "Target directory for Rime data")
 
@@ -57,12 +58,12 @@ if(NOT BOOST_USE_CXX11)
   add_definitions("-DBOOST_NO_CXX11_SCOPED_ENUMS")
 endif()
 
-set(BOOST_COMPONENTS filesystem regex system locale)
+set(BOOST_COMPONENTS filesystem regex system)
 
 if(BOOST_USE_SIGNALS2)
   add_definitions("-DBOOST_SIGNALS2")
 else()
-  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} singals)
+  set(BOOST_COMPONENTS ${BOOST_COMPONENTS} signals)
 endif()
 
 find_package(Boost 1.46.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
@@ -91,15 +92,6 @@ if(ENABLE_LOGGING)
 endif()
 
 find_package(Threads)
-
-if (BUILD_WITH_ICU)
-  find_package(ICU COMPONENTS uc)
-endif()
-
-find_package(Iconv)
-if (ICONV_FOUND)
-  include_directories(${ICONV_INCLUDE_DIRS})
-endif()
 
 if(BUILD_TEST)
   find_package(GTest REQUIRED)
@@ -145,6 +137,9 @@ include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include)
 link_directories(${PROJECT_SOURCE_DIR}/thirdparty/lib)
 
 if(MSVC)
+  # https://stackoverflow.com/a/31264946
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
+  set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /DEBUG /OPT:REF /OPT:ICF")
   if(MSVC10)
     # stdint.h is missing from VS2010
     include_directories(${PROJECT_SOURCE_DIR}/thirdparty/include/msvc)
@@ -158,11 +153,11 @@ if(UNIX)
 endif()
 
 if(NOT DEFINED LIB_INSTALL_DIR)
-    set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX})
+    set(LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR})
 endif()
 
 if(NOT DEFINED BIN_INSTALL_DIR)
-    set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+    set(BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR})
 endif()
 
 # uninstall target
@@ -173,13 +168,13 @@ configure_file(
 add_custom_target(uninstall
   COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux|FreeBSD|DragonFly|GNU")
   set(prefix "${CMAKE_INSTALL_PREFIX}")
   set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
-  set(bindir "${exec_prefix}/bin")
-  set(libdir "${LIB_INSTALL_DIR}")
+  set(bindir "${exec_prefix}/${BIN_INSTALL_DIR}")
+  set(libdir "${exec_prefix}/${LIB_INSTALL_DIR}")
   set(pkgdatadir "${prefix}${rime_data_dir}")
-  set(includedir "${CMAKE_INSTALL_PREFIX}/include")
+  set(includedir "${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
   configure_file(
       ${PROJECT_SOURCE_DIR}/rime.pc.in
       ${PROJECT_BINARY_DIR}/rime.pc

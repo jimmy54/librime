@@ -12,7 +12,7 @@
 #include <rime/engine.h>
 #include <rime/dict/vocabulary.h>
 #include <rime/gear/charset_filter.h>
-#include <boost/locale/encoding.hpp>
+
 
 namespace rime {
 
@@ -46,9 +46,8 @@ bool contains_extended_cjk(const string& text)
 
 // CharsetFilterTranslation
 
-CharsetFilterTranslation::CharsetFilterTranslation(
-    an<Translation> translation, const string& charset)
-    : translation_(translation), charset_(charset) {
+CharsetFilterTranslation::CharsetFilterTranslation(an<Translation> translation)
+    : translation_(translation) {
   LocateNextCandidate();
 }
 
@@ -66,10 +65,14 @@ an<Candidate> CharsetFilterTranslation::Peek() {
   return translation_->Peek();
 }
 
+bool CharsetFilterTranslation::FilterCandidate(an<Candidate> cand) {
+  return CharsetFilter::FilterText(cand->text());
+}
+
 bool CharsetFilterTranslation::LocateNextCandidate() {
   while (!translation_->exhausted()) {
     auto cand = translation_->Peek();
-    if (cand && CharsetFilter::FilterText(cand->text(), charset_))
+    if (cand && FilterCandidate(cand))
       return true;
     translation_->Next();
   }
@@ -79,17 +82,8 @@ bool CharsetFilterTranslation::LocateNextCandidate() {
 
 // CharsetFilter
 
-bool CharsetFilter::FilterText(const string& text, const string& charset) {
-  if (charset.empty()) return !contains_extended_cjk(text);
-  try {
-    boost::locale::conv::from_utf(text, charset, boost::locale::conv::method_type::stop);
-  }
-  catch(boost::locale::conv::conversion_error const& /*ex*/) {
-    return false;
-  }
-  catch(...) {
-  }
-  return true;
+bool CharsetFilter::FilterText(const string& text) {
+  return !contains_extended_cjk(text);
 }
 
 bool CharsetFilter::FilterDictEntry(an<DictEntry> entry) {
@@ -102,11 +96,12 @@ CharsetFilter::CharsetFilter(const Ticket& ticket)
 
 an<Translation> CharsetFilter::Apply(
     an<Translation> translation, CandidateList* candidates) {
-  if (name_space_.empty() && !engine_->context()->get_option("extended_charset")) {
+  if (name_space_.empty() &&
+      !engine_->context()->get_option("extended_charset")) {
     return New<CharsetFilterTranslation>(translation);
   }
-  if (!name_space_.empty() && engine_->context()->get_option(name_space_)) {
-    return New<CharsetFilterTranslation>(translation, name_space_);
+  if (!name_space_.empty()) {
+    LOG(ERROR) << "charset parameter is unsupported by basic charset_filter";
   }
   return translation;
 }
