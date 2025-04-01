@@ -201,14 +201,36 @@ void ConcreteEngine::CalculateSegmentation(Segmentation* segments) {
 }
 
 void ConcreteEngine::TranslateSegments(Segmentation* segments) {
+  if (!segments) {
+    LOG(ERROR) << "TranslateSegments called with null segments";
+    return;
+  }
+  
   DLOG(INFO) << "TranslateSegments: " << *segments;
   for (Segment& segment : *segments) {
     DLOG(INFO) << "segment [" << segment.start << ", " << segment.end
-               << "), status: " << segment.status;
+              << "), status: " << segment.status;
     if (segment.status >= Segment::kGuess)
       continue;
+    
+    // 检查segment是否有效
+    if (segment.start >= segment.end || segment.start >= segments->input().length()) {
+      LOG(WARNING) << "Invalid segment range: [" << segment.start << ", " << segment.end << ")";
+      continue;
+    }
+    
     size_t len = segment.end - segment.start;
-    string input = segments->input().substr(segment.start, len);
+    string input;
+    
+    if (segment.start + len <= segments->input().length()) {
+      input = segments->input().substr(segment.start, len);
+    } else {
+      LOG(ERROR) << "Invalid substring range: start=" << segment.start 
+                << ", len=" << len 
+                << ", input_length=" << segments->input().length();
+      continue;
+    }
+    
     DLOG(INFO) << "translating segment: [" << input << "]";
     auto menu = New<Menu>();
     for (auto& translator : translators_) {

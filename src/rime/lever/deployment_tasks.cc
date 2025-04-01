@@ -160,23 +160,44 @@ bool InstallationUpdate::Run(Deployer* deployer) {
 }
 
 bool WorkspaceUpdate::Run(Deployer* deployer) {
+  if (!deployer) {
+    LOG(ERROR) << "WorkspaceUpdate::Run: deployer is null";
+    return false;
+  }
+
   LOG(INFO) << "updating workspace.";
+  
+  // 配置文件更新任务
   {
     the<DeploymentTask> t;
     t.reset(new ConfigFileUpdate("default.yaml", "config_version"));
-    t->Run(deployer);
-    // Deprecated: symbols.yaml is only used as source file
-    // t.reset(new ConfigFileUpdate("symbols.yaml", "config_version"));
-    // t->Run(deployer);
+    if (t) {
+      t->Run(deployer);
+    } else {
+      LOG(ERROR) << "Failed to create ConfigFileUpdate task";
+    }
+    
     t.reset(new SymlinkingPrebuiltDictionaries);
-    t->Run(deployer);
+    if (t) {
+      t->Run(deployer);
+    } else {
+      LOG(ERROR) << "Failed to create SymlinkingPrebuiltDictionaries task";
+    }
   }
 
-  the<Config> config(Config::Require("config")->Create("default"));
+  // 获取配置
+  auto config_component = Config::Require("config");
+  if (!config_component) {
+    LOG(ERROR) << "Config component not available";
+    return false;
+  }
+  
+  the<Config> config(config_component->Create("default"));
   if (!config) {
     LOG(ERROR) << "Error loading default config.";
     return false;
   }
+  
   auto schema_list = config->GetList("schema_list");
   if (!schema_list) {
     LOG(WARNING) << "schema list not defined.";
@@ -187,65 +208,127 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   int success = 0;
   int failure = 0;
   map<string, path> schemas;
-  the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
-      {"schema_source_file", "", ".schema.yaml"}));
+  
+  // 创建资源解析器
+  auto resolver_service = Service::instance().CreateResourceResolver(
+      {"schema_source_file", "", ".schema.yaml"});
+  if (!resolver_service) {
+    LOG(ERROR) << "Failed to create resource resolver";
+    return false;
+  }
+  
+  the<ResourceResolver> resolver(resolver_service);
+  if (!resolver) {
+    LOG(ERROR) << "Failed to initialize resolver";
+    return false;
+  }
+  
+  // 定义构建模式的lambda函数
   auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
+    if (schema_id.empty()) {
+      LOG(WARNING) << "Empty schema_id in build_schema";
+      return;
+    }
+    
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
+      
     LOG(INFO) << "schema: " << schema_id;
     path schema_path;
+    
+    // 解析模式路径
     if (schemas.find(schema_id) == schemas.end()) {
       schema_path = resolver->ResolvePath(schema_id);
-      schemas[schema_id] = schema_path;
+      if (!schema_path.empty()) {
+        schemas[schema_id] = schema_path;
+      }
     } else {
       schema_path = schemas[schema_id];
     }
+    
     if (schema_path.empty() || !fs::exists(schema_path)) {
       if (as_dependency) {
         LOG(WARNING) << "missing input schema; skipped unsatisfied dependency: "
-                     << schema_id;
+                    << schema_id;
       } else {
         LOG(ERROR) << "missing input schema: " << schema_id;
         ++failure;
       }
       return;
     }
+    
+    // 创建模式更新任务
     the<DeploymentTask> t(new SchemaUpdate(schema_path));
+    if (!t) {
+      LOG(ERROR) << "Failed to create SchemaUpdate task for " << schema_id;
+      ++failure;
+      return;
+    }
+    
     if (t->Run(deployer))
       ++success;
     else
       ++failure;
   };
+  
+  // 获取模式组件
   auto schema_component = Config::Require("schema");
+  if (!schema_component) {
+    LOG(ERROR) << "Schema component not available";
+    return false;
+  }
+  
+  // 处理所有模式
   for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
     auto item = As<ConfigMap>(*it);
     if (!item)
       continue;
+    
     auto schema_property = item->GetValue("schema");
     if (!schema_property)
       continue;
+    
     const string& schema_id = schema_property->str();
+    if (schema_id.empty()) {
+      continue;
+    }
+    
     build_schema(schema_id);
+    
     the<Config> schema_config(schema_component->Create(schema_id));
     if (!schema_config)
       continue;
-    if (auto dependencies = schema_config->GetList("schema/dependencies")) {
+    
+    auto dependencies = schema_config->GetList("schema/dependencies");
+    if (dependencies) {
       for (auto d = dependencies->begin(); d != dependencies->end(); ++d) {
         auto dependency = As<ConfigValue>(*d);
         if (!dependency)
           continue;
+        
         const string& dependency_id = dependency->str();
-        bool as_dependency = true;
-        build_schema(dependency_id, as_dependency);
+        if (!dependency_id.empty()) {
+          bool as_dependency = true;
+          build_schema(dependency_id, as_dependency);
+        }
       }
     }
   }
+  
   LOG(INFO) << "finished updating schemas: " << success << " success, "
             << failure << " failure.";
 
-  the<Config> user_config(Config::Require("user_config")->Create("user"));
-  // TODO: store as 64-bit number to avoid the year 2038 problem
-  user_config->SetInt("var/last_build_time", (int)time(NULL));
+  // 更新用户配置
+  auto user_config_component = Config::Require("user_config");
+  if (user_config_component) {
+    the<Config> user_config(user_config_component->Create("user"));
+    if (user_config) {
+      // TODO: store as 64-bit number to avoid the year 2038 problem
+      user_config->SetInt("var/last_build_time", (int)time(NULL));
+    }
+  } else {
+    LOG(WARNING) << "user_config component not available";
+  }
 
   return failure == 0;
 }
