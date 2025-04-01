@@ -4,13 +4,14 @@
 //
 // 2011-08-09 GONG Chen <chen.sst@gmail.com>
 //
+
+#include "rime_api_impl.h"
+
 #include <cstring>
 #include <sstream>
 #include <rime/common.h>
 #include <rime/module.h>
 #include <rime/setup.h>
-
-#include "rime_api_impl.h"
 
 using namespace rime;
 
@@ -25,12 +26,20 @@ extern void rime_require_module_core();
 extern void rime_require_module_dict();
 extern void rime_require_module_gears();
 extern void rime_require_module_levers();
+extern void rime_require_module_lua();
+extern void rime_require_module_octagram();
+extern void rime_require_module_predict();
+extern void rime_require_module_tx();
 // link to default modules explicitly when building static library.
 void rime_declare_module_dependencies() {
   rime_require_module_core();
   rime_require_module_dict();
   rime_require_module_gears();
   rime_require_module_levers();
+  rime_require_module_lua();
+  rime_require_module_octagram();
+  rime_require_module_predict();
+  rime_require_module_tx();
 }
 #endif
 
