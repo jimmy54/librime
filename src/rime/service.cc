@@ -193,6 +193,14 @@ ResourceResolver* Service::CreateStagingResourceResolver(
   return resolver.release();
 }
 
+ResourceResolver* Service::CreateUserDbResourceResolver(
+    const ResourceType& type) {
+  the<FallbackResourceResolver> resolver(new FallbackResourceResolver(type));
+  resolver->set_root_path(deployer().userdb_dir);
+  resolver->set_fallback_root_path(deployer().shared_data_dir);
+  return resolver.release();
+}
+
 Service& Service::instance() {
   static the<Service> s_instance;
   if (!s_instance) {

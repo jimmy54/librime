@@ -18,6 +18,7 @@ Deployer::Deployer()
       prebuilt_data_dir("build"),
       staging_dir("build"),
       sync_dir("sync"),
+      userdb_dir("."),
       user_id("unknown"),
       backup_config_files(true) {}
 
