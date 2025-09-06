@@ -25,7 +25,7 @@ static const ResourceType kDbResourceType = {"db", "", ""};
 
 DbComponentBase::DbComponentBase()
     : db_resource_resolver_(
-          Service::instance().CreateResourceResolver(kDbResourceType)) {}
+          Service::instance().CreateUserDbResourceResolver(kDbResourceType)) {}
 
 DbComponentBase::~DbComponentBase() {}
 
