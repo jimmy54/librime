@@ -25,13 +25,28 @@ static const ResourceType kDbResourceType = {"db", "", ""};
 
 DbComponentBase::DbComponentBase()
     : db_resource_resolver_(
-          Service::instance().CreateUserDbResourceResolver(kDbResourceType)) {}
+          Service::instance().CreateResourceResolver(kDbResourceType)) {}
 
 DbComponentBase::~DbComponentBase() {}
 
 path DbComponentBase::DbFilePath(const string& name,
                                  const string& extension) const {
   return db_resource_resolver_->ResolvePath(name + extension);
+}
+
+// UserDbComponentBase
+
+static const ResourceType kUserDbResourceType = {"db", "", ""};
+
+UserDbComponentBase::UserDbComponentBase()
+    : userdb_resource_resolver_(
+          Service::instance().CreateUserDbResourceResolver(kUserDbResourceType)) {}
+
+UserDbComponentBase::~UserDbComponentBase() {}
+
+path UserDbComponentBase::DbFilePath(const string& name,
+                                     const string& extension) const {
+  return userdb_resource_resolver_->ResolvePath(name + extension);
 }
 
 // Db members

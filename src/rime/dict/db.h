@@ -104,6 +104,18 @@ class RIME_DLL DbComponentBase {
   the<ResourceResolver> db_resource_resolver_;
 };
 
+// 专门用于用户数据库的组件基类，使用独立的资源解析器
+class RIME_DLL UserDbComponentBase {
+ public:
+  UserDbComponentBase();
+  virtual ~UserDbComponentBase();
+
+  path DbFilePath(const string& name, const string& extension) const;
+
+ protected:
+  the<ResourceResolver> userdb_resource_resolver_;
+};
+
 template <class DbClass>
 class DbComponent : public DbClass::Component, protected DbComponentBase {
  public:
