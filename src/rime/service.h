@@ -80,7 +80,7 @@ class RIME_DLL Service {
       const ResourceType& type);
   ResourceResolver* CreateDeployedResourceResolver(const ResourceType& type);
   ResourceResolver* CreateStagingResourceResolver(const ResourceType& type);
-  ResourceResolver* CreateUserDbResourceResolver(const ResourceType& type);
+  ResourceResolver* CreateUserProfileResourceResolver(const ResourceType& type);
 
   Deployer& deployer() { return deployer_; }
   bool disabled() { return !started_ || deployer_.IsMaintenanceMode(); }

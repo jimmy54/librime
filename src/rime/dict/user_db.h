@@ -98,7 +98,8 @@ class UserDbWrapper : public BaseDb {
 
 /// Implements a component that serves as a factory for a user db class.
 template <class BaseDb>
-class UserDbComponent : public UserDb::Component, protected UserDbComponentBase {
+class UserDbComponent : public UserDb::Component,
+                        protected UserDbComponentBase {
  public:
   using UserDbImpl = UserDbWrapper<BaseDb>;
   Db* Create(const string& name) override {

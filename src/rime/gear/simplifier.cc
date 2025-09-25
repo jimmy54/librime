@@ -310,7 +310,7 @@ Simplifier* SimplifierComponent::Create(const Ticket& ticket) {
     return nullptr;
   }
   if (opencc_config_path.is_relative()) {
-    path user_config_path = Service::instance().deployer().user_profile_dir;
+    path user_config_path = Service::instance().deployer().user_data_dir;
     path shared_config_path = Service::instance().deployer().shared_data_dir;
     (user_config_path /= "opencc") /= opencc_config_path;
     (shared_config_path /= "opencc") /= opencc_config_path;

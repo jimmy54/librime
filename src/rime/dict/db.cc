@@ -40,7 +40,8 @@ static const ResourceType kUserDbResourceType = {"db", "", ""};
 
 UserDbComponentBase::UserDbComponentBase()
     : userdb_resource_resolver_(
-          Service::instance().CreateUserDbResourceResolver(kUserDbResourceType)) {}
+          Service::instance().CreateUserProfileResourceResolver(
+              kUserDbResourceType)) {}
 
 UserDbComponentBase::~UserDbComponentBase() {}
 
