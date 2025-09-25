@@ -174,7 +174,7 @@ ResourceResolver* Service::CreateResourceResolver(const ResourceType& type) {
 ResourceResolver* Service::CreateUserSpecificResourceResolver(
     const ResourceType& type) {
   the<ResourceResolver> resolver(new ResourceResolver(type));
-  resolver->set_root_path(deployer().user_data_dir);
+  resolver->set_root_path(deployer().user_profile_dir);
   return resolver.release();
 }
 
@@ -193,7 +193,7 @@ ResourceResolver* Service::CreateStagingResourceResolver(
   return resolver.release();
 }
 
-ResourceResolver* Service::CreateUserDbResourceResolver(
+ResourceResolver* Service::CreateUserProfileResourceResolver(
     const ResourceType& type) {
   the<FallbackResourceResolver> resolver(new FallbackResourceResolver(type));
   resolver->set_root_path(deployer().user_profile_dir);

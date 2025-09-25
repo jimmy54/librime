@@ -47,12 +47,15 @@ int add_schema(int count, char* schemas[]) {
 }
 
 int set_active_schema(const string& schema_id) {
+  Deployer& deployer(Service::instance().deployer());
+  path user_config_path = deployer.user_profile_dir / "user.yaml";
+  
   Config config;
-  if (!config.LoadFromFile(path{"user.yaml"})) {
-    LOG(INFO) << "creating new file 'user.yaml'.";
+  if (!config.LoadFromFile(user_config_path)) {
+    LOG(INFO) << "creating new file '" << user_config_path << "'.";
   }
   config["var"]["previously_selected_schema"] = schema_id;
-  if (!config.SaveToFile(path{"user.yaml"})) {
+  if (!config.SaveToFile(user_config_path)) {
     LOG(ERROR) << "failed to set active schema: " << schema_id;
     return 1;
   }
@@ -74,6 +77,8 @@ static void setup_deployer(Deployer* deployer, int argc, char* argv[]) {
     deployer->staging_dir = deployer->user_data_dir / "build";
   }
   deployer->prebuilt_data_dir = deployer->shared_data_dir / "build";
+  // Set user_profile_dir to the same as user_data_dir by default
+  deployer->user_profile_dir = deployer->user_data_dir;
 }
 
 int main(int argc, char* argv[]) {
