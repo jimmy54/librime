@@ -63,10 +63,10 @@ RIME_DLL void SetupDeployer(RimeTraits* traits) {
     deployer.staging_dir = path(traits->staging_dir);
   else
     deployer.staging_dir = deployer.user_data_dir / "build";
-  if (RIME_PROVIDED(traits, userdb_dir))
-    deployer.userdb_dir = path(traits->userdb_dir);
+  if (RIME_PROVIDED(traits, user_profile_dir))
+    deployer.user_profile_dir = path(traits->user_profile_dir);
   else
-    deployer.userdb_dir = deployer.user_data_dir;
+    deployer.user_profile_dir = deployer.user_data_dir;
 }
 
 RIME_DLL void SetupLogging(const char* app_name,

@@ -37,7 +37,7 @@ class Deployer : public Messenger {
   path prebuilt_data_dir;
   path staging_dir;
   path sync_dir;
-  path userdb_dir;
+  path user_profile_dir;
   string user_id;
   string distribution_name;
   string distribution_code_name;

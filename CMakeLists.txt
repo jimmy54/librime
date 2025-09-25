@@ -158,9 +158,9 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/src/rime/build_config.h.in"
   "${PROJECT_BINARY_DIR}/src/rime/build_config.h")
 
-include_directories(${PROJECT_BINARY_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(BEFORE ${PROJECT_BINARY_DIR}/src)
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/src)
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/include)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
 if(MSVC)

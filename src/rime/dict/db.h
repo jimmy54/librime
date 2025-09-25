@@ -104,7 +104,7 @@ class RIME_DLL DbComponentBase {
   the<ResourceResolver> db_resource_resolver_;
 };
 
-// 专门用于用户数据库的组件基类，使用独立的资源解析器
+// 专门用于用户配置档案数据库的组件基类，使用独立的资源解析器
 class RIME_DLL UserDbComponentBase {
  public:
   UserDbComponentBase();
