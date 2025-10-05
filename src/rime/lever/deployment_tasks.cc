@@ -82,7 +82,7 @@ bool DetectModifications::Run(Deployer* deployer) {
 bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
   const path& shared_data_path(deployer->shared_data_dir);
-  const path& user_data_path(deployer->user_data_dir);
+  const path& user_data_path(deployer->user_profile_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path;
     std::error_code ec;
@@ -453,7 +453,6 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
 
 bool PrebuildAllSchemas::Run(Deployer* deployer) {
   const path shared_data_path(deployer->shared_data_dir);
-  const path user_data_path(deployer->user_data_dir);
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path))
     return false;
   bool success = true;
@@ -587,7 +586,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
 
 bool CleanupTrash::Run(Deployer* deployer) {
   LOG(INFO) << "clean up trash.";
-  const path user_data_path(deployer->user_data_dir);
+  const path user_data_path(deployer->user_profile_dir);
   if (!fs::exists(user_data_path))
     return false;
   path trash = user_data_path / "trash";

@@ -114,6 +114,8 @@ typedef struct rime_traits_t {
   const char* prebuilt_data_dir;
   //! staging directory. defaults to ${user_data_dir}/build
   const char* staging_dir;
+  //! user profile directory. defaults to ${user_data_dir} if not set
+  const char* user_profile_dir;
 } RimeTraits;
 
 typedef struct {
@@ -506,6 +508,10 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                                               size_t index);
 
   Bool (*change_page)(RimeSessionId session_id, Bool backward);
+
+  Bool (*compile_config_file)(const char* src_path,
+                              const char* dest_path,
+                              const char* file_name);
 } RIME_FLAVORED(RimeApi);
 
 //! API entry

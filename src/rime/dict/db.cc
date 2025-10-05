@@ -34,6 +34,22 @@ path DbComponentBase::DbFilePath(const string& name,
   return db_resource_resolver_->ResolvePath(name + extension);
 }
 
+// UserDbComponentBase
+
+static const ResourceType kUserDbResourceType = {"db", "", ""};
+
+UserDbComponentBase::UserDbComponentBase()
+    : userdb_resource_resolver_(
+          Service::instance().CreateUserProfileResourceResolver(
+              kUserDbResourceType)) {}
+
+UserDbComponentBase::~UserDbComponentBase() {}
+
+path UserDbComponentBase::DbFilePath(const string& name,
+                                     const string& extension) const {
+  return userdb_resource_resolver_->ResolvePath(name + extension);
+}
+
 // Db members
 
 Db::Db(const path& file_path, const string& name)

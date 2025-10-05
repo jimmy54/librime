@@ -158,9 +158,9 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/src/rime/build_config.h.in"
   "${PROJECT_BINARY_DIR}/src/rime/build_config.h")
 
-include_directories(${PROJECT_BINARY_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(BEFORE ${PROJECT_BINARY_DIR}/src)
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/src)
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/include)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
 if(MSVC)
@@ -265,7 +265,7 @@ set(list "")
 foreach(mod ${rime_plugins_modules})
   set(list "${list},Q(${mod})")
 endforeach()
-add_definitions(-DRIME_EXTRA_MODULES=${list})
+set(RIME_SETUP_EXTRA_MODULES "${list}")
 if(BUILD_SHARED_LIBS AND BUILD_SEPARATE_LIBS AND rime_plugins_objs)
   set(rime_plugins_library rime-plugins)
 endif()
