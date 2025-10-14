@@ -234,6 +234,31 @@ RIME_DEPRECATED void RimeClearComposition(RimeSessionId session_id) {
   session->ClearComposition();
 }
 
+// context
+
+RIME_DEPRECATED Bool RimeSetContextText(RimeSessionId session_id,
+                                        const char* preceding_text,
+                                        const char* following_text) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx)
+    return False;
+  ctx->set_external_context(preceding_text ? preceding_text : "",
+                            following_text ? following_text : "");
+  return True;
+}
+
+RIME_DEPRECATED void RimeClearContextText(RimeSessionId session_id) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  Context* ctx = session->context();
+  if (ctx)
+    ctx->clear_external_context();
+}
+
 // output
 
 static void rime_candidate_copy(RimeCandidate* dest, const an<Candidate>& src) {
@@ -1194,6 +1219,8 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.process_key = &RimeProcessKey;
     s_api.commit_composition = &RimeCommitComposition;
     s_api.clear_composition = &RimeClearComposition;
+    s_api.set_context_text = &RimeSetContextText;
+    s_api.clear_context_text = &RimeClearContextText;
     s_api.get_commit = &RimeGetCommit;
     s_api.free_commit = &RimeFreeCommit;
     s_api.get_context = &RimeGetContext;

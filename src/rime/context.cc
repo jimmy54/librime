@@ -328,4 +328,18 @@ void Context::ClearTransientOptions() {
   }
 }
 
+void Context::set_external_context(const string& preceding_text,
+                                   const string& following_text) {
+  external_preceding_text_ = preceding_text;
+  external_following_text_ = following_text;
+  DLOG(INFO) << "Context::set_external_context: preceding=\"" << preceding_text
+             << "\", following=\"" << following_text << "\"";
+}
+
+void Context::clear_external_context() {
+  external_preceding_text_.clear();
+  external_following_text_.clear();
+  DLOG(INFO) << "Context::clear_external_context";
+}
+
 }  // namespace rime
