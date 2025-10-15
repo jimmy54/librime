@@ -95,22 +95,6 @@ an<Translation> ContextualRankingFilter::Apply(an<Translation> translation,
     return translation;
   }
 
-  // 3. Quick check candidate count - skip if too few
-  int quick_count = 0;
-  auto temp_trans = translation;
-  while (!temp_trans->exhausted() && quick_count < 5) {
-    if (temp_trans->Peek()) {
-      ++quick_count;
-    }
-    temp_trans->Next();
-  }
-
-  if (quick_count < 3) {
-    DLOG(INFO) << "ContextualRankingFilter: Skip (too few candidates: "
-               << quick_count << ")";
-    return translation;
-  }
-
   // Get external context (priority) or internal context
   string left_context = ctx->external_preceding_text();
   string right_context = ctx->external_following_text();
@@ -193,6 +177,26 @@ an<Translation> ContextualRankingFilter::Apply(an<Translation> translation,
 
   // If we have candidates to re-rank
   if (!scored_candidates.empty()) {
+    // Check if we have enough candidates to make re-ranking worthwhile
+    if (scored_candidates.size() < 3) {
+      DLOG(INFO)
+          << "ContextualRankingFilter: Skip sorting (too few candidates: "
+          << scored_candidates.size() << "), but still return collected ones";
+
+      // Return collected candidates without sorting
+      auto fifo = New<FifoTranslation>();
+      for (auto& [cand, score] : scored_candidates) {
+        fifo->Append(cand);
+      }
+      // Append remaining candidates
+      while (!translation->exhausted()) {
+        if (auto cand = translation->Peek()) {
+          fifo->Append(cand);
+        }
+        translation->Next();
+      }
+      return fifo;
+    }
     // Sort by total score (descending)
     auto sort_start = std::chrono::steady_clock::now();
     std::stable_sort(
