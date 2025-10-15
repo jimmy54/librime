@@ -28,6 +28,11 @@ class ContextualRankingFilter : public Filter {
   Grammar* grammar_;
   bool enabled_;
   int max_candidates_;  // Maximum number of candidates to re-rank
+
+  // Smart triggering parameters
+  int min_input_length_;   // Minimum input length to trigger re-ranking
+  int debounce_delay_ms_;  // Debounce delay in milliseconds
+  std::chrono::steady_clock::time_point last_input_time_;
 };
 
 }  // namespace rime
