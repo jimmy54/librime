@@ -177,7 +177,7 @@ class TranslatorOptions {
   string delimiters_;
   vector<string> tags_{"abc"};  // invariant: non-empty
   bool contextual_suggestions_ = false;
-  bool contextual_group_by_type_ = false;  // group candidates by type in contextual translation
+  bool contextual_group_by_type_ = true;  // group candidates by type in contextual translation (default: true for backward compatibility)
   bool enable_completion_ = true;
   bool strict_spelling_ = false;
   double initial_quality_ = 0.;

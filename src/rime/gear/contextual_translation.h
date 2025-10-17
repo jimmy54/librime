@@ -18,7 +18,7 @@ class ContextualTranslation : public PrefetchTranslation {
                         string input,
                         string preceding_text,
                         Grammar* grammar,
-                        bool group_by_type = false)
+                        bool group_by_type = true)
       : PrefetchTranslation(translation),
         input_(input),
         preceding_text_(preceding_text),
