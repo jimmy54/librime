@@ -120,6 +120,8 @@ TranslatorOptions::TranslatorOptions(const Ticket& ticket) {
         config->GetString("speller/delimiter", &delimiters_);
     config->GetBool(ticket.name_space + "/contextual_suggestions",
                     &contextual_suggestions_);
+    config->GetBool(ticket.name_space + "/contextual_group_by_type",
+                    &contextual_group_by_type_);
     config->GetBool(ticket.name_space + "/enable_completion",
                     &enable_completion_);
     config->GetBool(ticket.name_space + "/strict_spelling", &strict_spelling_);

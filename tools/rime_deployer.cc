@@ -49,7 +49,7 @@ int add_schema(int count, char* schemas[]) {
 int set_active_schema(const string& schema_id) {
   Deployer& deployer(Service::instance().deployer());
   path user_config_path = deployer.user_profile_dir / "user.yaml";
-  
+
   Config config;
   if (!config.LoadFromFile(user_config_path)) {
     LOG(INFO) << "creating new file '" << user_config_path << "'.";

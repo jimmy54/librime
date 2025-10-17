@@ -53,7 +53,8 @@ class Poet {
       return translation;
     }
     return New<ContextualTranslation>(translation, input, preceding_text,
-                                      grammar_.get());
+                                      grammar_.get(),
+                                      translator->contextual_group_by_type());
   }
 
  private:

@@ -20,7 +20,9 @@ bool ContextualTranslation::Replenish() {
     if (cand->type() == "phrase" || cand->type() == "user_phrase" ||
         cand->type() == "table" || cand->type() == "user_table" ||
         cand->type() == "completion") {
-      if (end_pos != cand->end() || last_type != cand->type()) {
+      // Group by end position and optionally by type
+      if (end_pos != cand->end() ||
+          (group_by_type_ && last_type != cand->type())) {
         end_pos = cand->end();
         last_type = cand->type();
         AppendToCache(queue);
