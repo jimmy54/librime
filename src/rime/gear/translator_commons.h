@@ -159,6 +159,10 @@ class TranslatorOptions {
   void set_contextual_suggestions(bool enabled) {
     contextual_suggestions_ = enabled;
   }
+  bool contextual_group_by_type() const { return contextual_group_by_type_; }
+  void set_contextual_group_by_type(bool enabled) {
+    contextual_group_by_type_ = enabled;
+  }
   bool enable_completion() const { return enable_completion_; }
   void set_enable_completion(bool enabled) { enable_completion_ = enabled; }
   bool strict_spelling() const { return strict_spelling_; }
@@ -173,6 +177,7 @@ class TranslatorOptions {
   string delimiters_;
   vector<string> tags_{"abc"};  // invariant: non-empty
   bool contextual_suggestions_ = false;
+  bool contextual_group_by_type_ = true;  // group candidates by type in contextual translation (default: true for backward compatibility)
   bool enable_completion_ = true;
   bool strict_spelling_ = false;
   double initial_quality_ = 0.;

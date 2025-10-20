@@ -83,6 +83,17 @@ class RIME_DLL Context {
   // others are session scoped.
   void ClearTransientOptions();
 
+  // External context for contextual suggestions
+  void set_external_context(const string& preceding_text,
+                            const string& following_text);
+  const string& external_preceding_text() const {
+    return external_preceding_text_;
+  }
+  const string& external_following_text() const {
+    return external_following_text_;
+  }
+  void clear_external_context();
+
   Notifier& commit_notifier() { return commit_notifier_; }
   Notifier& select_notifier() { return select_notifier_; }
   Notifier& update_notifier() { return update_notifier_; }
@@ -105,6 +116,10 @@ class RIME_DLL Context {
   CommitHistory commit_history_;
   map<string, bool> options_;
   map<string, string> properties_;
+
+  // External context from frontend
+  string external_preceding_text_;
+  string external_following_text_;
 
   Notifier commit_notifier_;
   Notifier select_notifier_;

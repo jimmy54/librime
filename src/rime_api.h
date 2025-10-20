@@ -320,6 +320,17 @@ typedef struct RIME_FLAVORED(rime_api_t) {
   Bool (*commit_composition)(RimeSessionId session_id);
   void (*clear_composition)(RimeSessionId session_id);
 
+  // context
+
+  //! Set external context text for contextual suggestions
+  //! @param preceding_text: text before cursor position
+  //! @param following_text: text after cursor position
+  Bool (*set_context_text)(RimeSessionId session_id,
+                           const char* preceding_text,
+                           const char* following_text);
+  //! Clear external context text
+  void (*clear_context_text)(RimeSessionId session_id);
+
   // output
 
   Bool (*get_commit)(RimeSessionId session_id, RimeCommit* commit);

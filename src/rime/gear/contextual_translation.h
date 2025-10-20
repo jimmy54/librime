@@ -17,11 +17,13 @@ class ContextualTranslation : public PrefetchTranslation {
   ContextualTranslation(an<Translation> translation,
                         string input,
                         string preceding_text,
-                        Grammar* grammar)
+                        Grammar* grammar,
+                        bool group_by_type = true)
       : PrefetchTranslation(translation),
         input_(input),
         preceding_text_(preceding_text),
-        grammar_(grammar) {}
+        grammar_(grammar),
+        group_by_type_(group_by_type) {}
 
  protected:
   bool Replenish() override;
@@ -33,6 +35,7 @@ class ContextualTranslation : public PrefetchTranslation {
   string input_;
   string preceding_text_;
   Grammar* grammar_;
+  bool group_by_type_;  // whether to group candidates by type
 };
 
 }  // namespace rime

@@ -258,6 +258,11 @@ string ConfigData::JoinPath(const vector<string>& keys) {
 
 an<ConfigItem> ConfigData::Traverse(const string& node_path) {
   DLOG(INFO) << "traverse: " << node_path;
+  if (!root) {
+    LOG(WARNING) << "traverse: root is null, cannot traverse path: "
+                 << node_path;
+    return nullptr;
+  }
   if (node_path.empty() || node_path == "/") {
     return root;
   }

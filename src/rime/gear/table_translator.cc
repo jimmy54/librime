@@ -356,9 +356,16 @@ bool TableTranslator::Memorize(const CommitEntry& commit_entry) {
 }
 
 string TableTranslator::GetPrecedingText(size_t start) const {
-  return !contextual_suggestions_ ? string()
-         : start > 0 ? engine_->context()->composition().GetTextBefore(start)
-                     : engine_->context()->commit_history().latest_text();
+  if (!contextual_suggestions_)
+    return string();
+  // Priority 1: Use external context from frontend
+  const auto& external = engine_->context()->external_preceding_text();
+  if (!external.empty()) {
+    return external;
+  }
+  // Priority 2: Use internal context
+  return start > 0 ? engine_->context()->composition().GetTextBefore(start)
+                   : engine_->context()->commit_history().latest_text();
 }
 
 // SentenceSyllabifier

@@ -72,6 +72,10 @@ void print_context(RimeContext* context) {
   print_menu(&context->menu);
 }
 
+// Global variable to accumulate committed text for context
+static char g_accumulated_context[1000] = {0};
+static bool g_auto_context_enabled = true;
+
 void print(RimeSessionId session_id) {
   RimeApi* rime = rime_get_api();
 
@@ -81,6 +85,33 @@ void print(RimeSessionId session_id) {
 
   if (rime->get_commit(session_id, &commit)) {
     printf("commit: %s\n", commit.text);
+
+    // Auto-update context with committed text
+    if (g_auto_context_enabled && RIME_API_AVAILABLE(rime, set_context_text)) {
+      // Append new commit to accumulated context
+      size_t current_len = strlen(g_accumulated_context);
+      size_t commit_len = strlen(commit.text);
+
+      // Keep last ~30 characters (about 10 Chinese characters)
+      const size_t max_context_len = 30;
+      if (current_len + commit_len > max_context_len) {
+        // Shift left to make room
+        size_t shift = current_len + commit_len - max_context_len;
+        memmove(g_accumulated_context, g_accumulated_context + shift,
+                current_len - shift);
+        g_accumulated_context[current_len - shift] = '\0';
+        current_len = strlen(g_accumulated_context);
+      }
+
+      // Append new commit
+      strncat(g_accumulated_context, commit.text,
+              sizeof(g_accumulated_context) - current_len - 1);
+
+      // Set as external context
+      rime->set_context_text(session_id, g_accumulated_context, "");
+      printf("  [auto context: \"%s\"]\n", g_accumulated_context);
+    }
+
     rime->free_commit(&commit);
   }
 
@@ -185,6 +216,74 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     }
     return true;
   }
+  // Set context text command: "set context <left_text> | <right_text>"
+  const char* kSetContextCommand = "set context ";
+  command_length = strlen(kSetContextCommand);
+  if (!strncmp(line, kSetContextCommand, command_length)) {
+    const char* context_text = line + command_length;
+    char left[256] = {0};
+    char right[256] = {0};
+
+    // Parse left and right context separated by '|'
+    const char* separator = strchr(context_text, '|');
+    if (separator) {
+      size_t left_len = separator - context_text;
+      if (left_len > 0 && left_len < sizeof(left)) {
+        strncpy(left, context_text, left_len);
+        // Trim trailing spaces
+        while (left_len > 0 && left[left_len - 1] == ' ') {
+          left[--left_len] = '\0';
+        }
+      }
+      // Copy right context, skip leading spaces
+      const char* right_start = separator + 1;
+      while (*right_start == ' ')
+        right_start++;
+      strncpy(right, right_start, sizeof(right) - 1);
+    } else {
+      // Only left context provided
+      strncpy(left, context_text, sizeof(left) - 1);
+    }
+
+    if (RIME_API_AVAILABLE(rime, set_context_text)) {
+      if (rime->set_context_text(session_id, left, right)) {
+        printf("✓ Context set: left=\"%s\", right=\"%s\"\n", left, right);
+      } else {
+        fprintf(stderr, "✗ Failed to set context\n");
+      }
+    } else {
+      fprintf(stderr, "✗ set_context_text API not available\n");
+    }
+    return true;
+  }
+  // Clear context command
+  if (!strcmp(line, "clear context")) {
+    if (RIME_API_AVAILABLE(rime, clear_context_text)) {
+      rime->clear_context_text(session_id);
+      g_accumulated_context[0] = '\0';  // Also clear accumulated context
+      printf("✓ Context cleared\n");
+    } else {
+      fprintf(stderr, "✗ clear_context_text API not available\n");
+    }
+    return true;
+  }
+  // Toggle auto context
+  if (!strcmp(line, "auto context on")) {
+    g_auto_context_enabled = true;
+    printf("✓ Auto context enabled\n");
+    return true;
+  }
+  if (!strcmp(line, "auto context off")) {
+    g_auto_context_enabled = false;
+    printf("✓ Auto context disabled\n");
+    return true;
+  }
+  // Show current context
+  if (!strcmp(line, "show context")) {
+    printf("Auto context: %s\n", g_auto_context_enabled ? "ON" : "OFF");
+    printf("Accumulated context: \"%s\"\n", g_accumulated_context);
+    return true;
+  }
   return false;
 }
 
@@ -221,6 +320,11 @@ int main(int argc, char* argv[]) {
 
   RIME_STRUCT(RimeTraits, traits);
   traits.app_name = "rime.console";
+  traits.user_profile_dir = "./user_profile";
+  traits.staging_dir = "./user_profile/build";
+  traits.log_dir = "./user_profile/log";
+  traits.min_log_level = 0;  // Enable INFO level logging for debugging
+
   rime->setup(&traits);
 
   rime->set_notification_handler(&on_message, NULL);
