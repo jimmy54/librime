@@ -82,6 +82,9 @@ endif()
 
 if(BUILD_SHARED_LIBS)
   add_library(rime ${rime_src})
+  # 为Debug模式添加完整的调试信息
+  target_compile_options(rime PRIVATE
+    $<$<CONFIG:Debug>:-O0 -g -ggdb -fno-limit-debug-info -fno-omit-frame-pointer -fstandalone-debug>)
   target_link_libraries(rime ${rime_deps})
   set_target_properties(rime PROPERTIES
     DEFINE_SYMBOL "RIME_EXPORTS"
@@ -100,6 +103,8 @@ if(BUILD_SHARED_LIBS)
   endif()
   if(BUILD_SEPARATE_LIBS)
     add_library(rime-dict ${rime_dict_module_src})
+    target_compile_options(rime-dict PRIVATE
+      $<$<CONFIG:Debug>:-O0 -g -ggdb -fno-limit-debug-info -fno-omit-frame-pointer -fstandalone-debug>)
     target_link_libraries(rime-dict
       ${rime_dict_deps}
       ${rime_library})
@@ -114,6 +119,8 @@ if(BUILD_SHARED_LIBS)
     install(TARGETS rime-dict DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 
     add_library(rime-gears ${rime_gears_src})
+    target_compile_options(rime-gears PRIVATE
+      $<$<CONFIG:Debug>:-O0 -g -ggdb -fno-limit-debug-info -fno-omit-frame-pointer -fstandalone-debug>)
     target_link_libraries(rime-gears
       ${rime_gears_deps}
       ${rime_library}
@@ -129,6 +136,8 @@ if(BUILD_SHARED_LIBS)
     install(TARGETS rime-gears DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR})
 
     add_library(rime-levers ${rime_levers_src})
+    target_compile_options(rime-levers PRIVATE
+      $<$<CONFIG:Debug>:-O0 -g -ggdb -fno-limit-debug-info -fno-omit-frame-pointer -fstandalone-debug>)
     target_link_libraries(rime-levers
       ${rime_levers_deps}
       ${rime_library}
@@ -147,6 +156,8 @@ if(BUILD_SHARED_LIBS)
       add_library(rime-plugins
         ${rime_plugins_src}
         ${rime_plugins_objs})
+      target_compile_options(rime-plugins PRIVATE
+        $<$<CONFIG:Debug>:-O0 -g -ggdb -fno-limit-debug-info -fno-omit-frame-pointer -fstandalone-debug>)
       target_link_libraries(rime-plugins
         ${rime_plugins_deps}
         ${rime_library}
@@ -165,6 +176,8 @@ if(BUILD_SHARED_LIBS)
   endif()
 else()
   add_library(rime-static STATIC ${rime_src})
+  target_compile_options(rime-static PRIVATE
+    $<$<CONFIG:Debug>:-O0 -g -ggdb -fno-limit-debug-info -fno-omit-frame-pointer -fstandalone-debug>)
   target_link_libraries(rime-static ${rime_deps})
   set_target_properties(rime-static PROPERTIES
     OUTPUT_NAME "rime" PREFIX "lib"

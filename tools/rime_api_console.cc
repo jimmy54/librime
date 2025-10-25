@@ -284,6 +284,203 @@ bool execute_special_command(const char* line, RimeSessionId session_id) {
     printf("Accumulated context: \"%s\"\n", g_accumulated_context);
     return true;
   }
+  
+  // Test RimeSetInputEx - exact match command
+  const char* kSetInputExCommand = "set input ex ";
+  command_length = strlen(kSetInputExCommand);
+  if (!strncmp(line, kSetInputExCommand, command_length)) {
+    const char* params = line + command_length;
+    char input[256] = {0};
+    int exact_length = 0;
+    
+    // Parse: "set input ex <input> <exact_length>"
+    if (sscanf(params, "%s %d", input, &exact_length) == 2) {
+      if (RIME_API_AVAILABLE(rime, set_input_ex)) {
+        rime->set_input_ex(session_id, input, exact_length);
+        printf("✓ Set input: \"%s\" with exact_length=%d\n", input, exact_length);
+        print(session_id);
+      } else {
+        printf("✗ RimeSetInputEx API not available\n");
+      }
+    } else {
+      printf("Usage: set input ex <input> <exact_length>\n");
+      printf("Example: set input ex bubu 2\n");
+    }
+    return true;
+  }
+  
+  // Run exact match test suite
+  if (!strcmp(line, "test exact match")) {
+    printf("\n");
+    printf("═══════════════════════════════════════════════════════════\n");
+    printf("  RimeSetInputEx 部分精确匹配功能测试\n");
+    printf("═══════════════════════════════════════════════════════════\n\n");
+    
+    if (!RIME_API_AVAILABLE(rime, set_input_ex)) {
+      printf("✗ RimeSetInputEx API not available!\n");
+      return true;
+    }
+    
+    // Test 1: 全部派生（默认行为）
+    printf("【测试 1】全部派生（exact_length=0，默认行为）\n");
+    printf("─────────────────────────────────────────────────────────\n");
+    printf("输入: \"bubu\", exact_length=0\n");
+    printf("预期: 包含所有派生组合的候选\n\n");
+    rime->set_input_ex(session_id, "bubu", 0);
+    print(session_id);
+    printf("\n");
+    
+    // Test 2: 前2码精确
+    printf("【测试 2】前2码精确（部分精确匹配）\n");
+    printf("─────────────────────────────────────────────────────────\n");
+    printf("输入: \"bubu\", exact_length=2\n");
+    printf("预期: 第一个音节只有 bu，第二个音节可派生\n");
+    printf("      应包含: 不步、不比、不你...\n");
+    printf("      不应包含: 比步、比比...\n\n");
+    rime->clear_composition(session_id);
+    rime->set_input_ex(session_id, "bubu", 2);
+    print(session_id);
+    printf("\n");
+    
+    // Test 3: 全部精确
+    printf("【测试 3】全部精确（exact_length=4）\n");
+    printf("─────────────────────────────────────────────────────────\n");
+    printf("输入: \"bubu\", exact_length=4\n");
+    printf("预期: 两个音节都是 bu\n");
+    printf("      应包含: 不步、不部...\n");
+    printf("      不应包含: 不比、不你...\n\n");
+    rime->clear_composition(session_id);
+    rime->set_input_ex(session_id, "bubu", 4);
+    print(session_id);
+    printf("\n");
+    
+    // Test 4: 负数（全部精确）
+    printf("【测试 4】负数处理（exact_length=-1）\n");
+    printf("─────────────────────────────────────────────────────────\n");
+    printf("输入: \"bubu\", exact_length=-1\n");
+    printf("预期: 等同于 exact_length=4（全部精确）\n\n");
+    rime->clear_composition(session_id);
+    rime->set_input_ex(session_id, "bubu", -1);
+    print(session_id);
+    printf("\n");
+    
+    // Test 5: 超长（限制为输入长度）
+    printf("【测试 5】超长处理（exact_length=100）\n");
+    printf("─────────────────────────────────────────────────────────\n");
+    printf("输入: \"bubu\", exact_length=100\n");
+    printf("预期: 等同于 exact_length=4（限制为输入长度）\n\n");
+    rime->clear_composition(session_id);
+    rime->set_input_ex(session_id, "bubu", 100);
+    print(session_id);
+    printf("\n");
+    
+    // Test 6: 单音节精确
+    printf("【测试 6】单音节精确\n");
+    printf("─────────────────────────────────────────────────────────\n");
+    printf("输入: \"bu\", exact_length=2\n");
+    printf("预期: 只有 bu 音节\n\n");
+    rime->clear_composition(session_id);
+    rime->set_input_ex(session_id, "bu", 2);
+    print(session_id);
+    printf("\n");
+    
+    // Test 7: 三音节测试
+    printf("【测试 7】三音节测试（前4码精确）\n");
+    printf("─────────────────────────────────────────────────────────\n");
+    printf("输入: \"bububi\", exact_length=4\n");
+    printf("预期: 前两个音节精确（bu+bu），第三个音节可派生\n\n");
+    rime->clear_composition(session_id);
+    rime->set_input_ex(session_id, "bububi", 4);
+    print(session_id);
+    printf("\n");
+    
+    // Test 8: 智能精确匹配长度管理
+    printf("【测试 8】智能精确匹配长度管理（V2.1 新特性）\n");
+    printf("─────────────────────────────────────────────────────────\n");
+    printf("场景: 逐步选择候选，系统自动管理精确长度\n\n");
+    
+    printf("步骤 1: 输入 \"bu\", exact_length=0（全部派生）\n");
+    rime->clear_composition(session_id);
+    rime->set_input_ex(session_id, "bu", 0);
+    print(session_id);
+    printf("→ 候选包含: 不、步、比、你...\n\n");
+    
+    printf("步骤 2: 模拟选择第一个候选（\"不\"）后的状态\n");
+    printf("→ 系统会自动设置 input_exact_length = 2\n");
+    printf("→ 已选择部分（\"不\"）变为精确匹配\n\n");
+    
+    printf("步骤 3: 模拟继续输入后的状态 input = \"不bu\"\n");
+    printf("→ 使用 set_input_ex(\"不bu\", 2) 模拟\n");
+    rime->clear_composition(session_id);
+    rime->set_input_ex(session_id, "不bu", 2);
+    print(session_id);
+    printf("→ 前2码（\"不\"）精确匹配\n");
+    printf("→ 后2码（\"bu\"）可以派生\n");
+    printf("→ 候选应包含: 不步、不比、不你...\n");
+    printf("→ 候选不应包含: 你不、比不...（第一个音节不是 bu）\n\n");
+    
+    printf("💡 关键特性：\n");
+    printf("  - 选择候选后，input_exact_length 自动更新为已选择部分的长度\n");
+    printf("  - 已选择 = 已确认 = 精确匹配\n");
+    printf("  - 未选择部分仍可派生\n");
+    printf("  - 无需手动管理精确长度\n\n");
+    
+    // Test 9: 对比测试（旧API）
+    printf("【测试 9】对比测试：使用旧 API RimeSetInput\n");
+    printf("─────────────────────────────────────────────────────────\n");
+    printf("输入: \"bubu\" (使用 RimeSetInput)\n");
+    printf("预期: 等同于 exact_length=0（全部派生）\n\n");
+    rime->clear_composition(session_id);
+    rime->set_input(session_id, "bubu");
+    print(session_id);
+    printf("\n");
+    
+    printf("═══════════════════════════════════════════════════════════\n");
+    printf("  测试完成！\n");
+    printf("═══════════════════════════════════════════════════════════\n\n");
+    
+    printf("💡 提示：\n");
+    printf("  - 如果方案没有配置 derive 规则，所有测试结果可能相同\n");
+    printf("  - 建议使用 14键拼音方案测试（有 derive/i/u/ 等规则）\n");
+    printf("  - 可以使用 'set input ex <input> <length>' 手动测试\n");
+    printf("  - 使用 'select schema <schema_id>' 切换方案\n");
+    printf("  - V2.1 新特性：选择候选后，系统自动管理精确匹配长度\n\n");
+    
+    return true;
+  }
+  
+  // Show help for new commands
+  if (!strcmp(line, "help exact match")) {
+    printf("\n");
+    printf("RimeSetInputEx 测试命令帮助\n");
+    printf("═══════════════════════════════════════════════════════════\n\n");
+    printf("命令列表：\n");
+    printf("  test exact match\n");
+    printf("      运行完整的测试套件\n\n");
+    printf("  set input ex <input> <exact_length>\n");
+    printf("      手动测试部分精确匹配\n");
+    printf("      参数：\n");
+    printf("        <input>         - 输入字符串\n");
+    printf("        <exact_length>  - 精确匹配长度\n");
+    printf("          = 0  : 全部派生（默认）\n");
+    printf("          > 0  : 前N个字符精确，后续派生\n");
+    printf("          < 0  : 全部精确\n\n");
+    printf("示例：\n");
+    printf("  set input ex bubu 2    # 前2码精确\n");
+    printf("  set input ex bubu 0    # 全部派生\n");
+    printf("  set input ex bubu -1   # 全部精确\n\n");
+    printf("推荐测试方案：\n");
+    printf("  1. 选择 14键拼音方案：\n");
+    printf("     select schema rime_ice_14\n\n");
+    printf("  2. 运行测试套件：\n");
+    printf("     test exact match\n\n");
+    printf("  3. 手动测试：\n");
+    printf("     set input ex bubu 2\n");
+    printf("     select candidate 1\n\n");
+    printf("═══════════════════════════════════════════════════════════\n\n");
+    return true;
+  }
+  
   return false;
 }
 
@@ -321,9 +518,15 @@ int main(int argc, char* argv[]) {
   RIME_STRUCT(RimeTraits, traits);
   traits.app_name = "rime.console";
   traits.user_profile_dir = "./user_profile";
-  traits.staging_dir = "./user_profile/build";
+//  traits.staging_dir = "./user_profile/build";
   traits.log_dir = "./user_profile/log";
   traits.min_log_level = 0;  // Enable INFO level logging for debugging
+
+
+  //bim-pinyin
+  traits.shared_data_dir = "/Users/jimmy54/Documents/job/BIM/hmos/hmosbim/hmosbim/products/phone/src/main/resources/resfile/SharedSupport";
+//  traits.user_data_dir = "/Users/jimmy54/Documents/job/BIM/hmos/hmosbim/hmosbim/products/phone/src/main/resources/resfile/space/schemas/bim-pinyin";
+  traits.user_data_dir = "./bim-pinyin";
 
   rime->setup(&traits);
 

@@ -61,8 +61,10 @@ class RIME_DLL Context {
   bool ClearNonConfirmedComposition();
   bool RefreshNonConfirmedComposition();
 
-  void set_input(const string& value);
+  void set_input(const string& value, int input_exact_length = 0);
   const string& input() const { return input_; }
+  int input_exact_length() const { return input_exact_length_; }
+  bool is_exact_at(size_t pos) const;
 
   void set_caret_pos(size_t caret_pos);
   size_t caret_pos() const { return caret_pos_; }
@@ -116,6 +118,9 @@ class RIME_DLL Context {
   CommitHistory commit_history_;
   map<string, bool> options_;
   map<string, string> properties_;
+
+  // Exact match length for partial exact matching
+  int input_exact_length_ = 0;
 
   // External context from frontend
   string external_preceding_text_;

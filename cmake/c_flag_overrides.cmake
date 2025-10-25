@@ -7,4 +7,8 @@ if(WIN32)
   else()
     set(CMAKE_C_FLAGS_RELEASE_INIT "-D_MT -O3 -DNDEBUG")
   endif()
+else()
+  # macOS/Linux平台的Debug配置
+  set(CMAKE_C_FLAGS_DEBUG_INIT "-O0 -g -ggdb -fno-limit-debug-info -fno-omit-frame-pointer -fstandalone-debug")
+  set(CMAKE_C_FLAGS_RELEASE_INIT "-O3 -DNDEBUG")
 endif()

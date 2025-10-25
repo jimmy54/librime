@@ -1141,7 +1141,20 @@ RIME_DEPRECATED Bool RimeSetInput(RimeSessionId session_id, const char* input) {
   Context* ctx = session->context();
   if (!ctx)
     return False;
-  ctx->set_input(input);
+  ctx->set_input(input, 0);
+  return True;
+}
+
+inline Bool RimeSetInputEx(RimeSessionId session_id,
+                           const char* input,
+                           int input_exact_length) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx)
+    return False;
+  ctx->set_input(input, input_exact_length);
   return True;
 }
 
@@ -1290,6 +1303,7 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.delete_candidate_on_current_page = &RimeDeleteCandidateOnCurrentPage;
     s_api.get_state_label_abbreviated = &RimeGetStateLabelAbbreviated;
     s_api.set_input = &RimeSetInput;
+    s_api.set_input_ex = &RimeSetInputEx;
     s_api.get_shared_data_dir_s = &RimeGetSharedDataDirSecure;
     s_api.get_user_data_dir_s = &RimeGetUserDataDirSecure;
     s_api.get_prebuilt_data_dir_s = &RimeGetPrebuiltDataDirSecure;

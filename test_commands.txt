@@ -1,0 +1,120 @@
+# RimeSetInputEx 测试命令清单
+# 复制这些命令到 rime_api_console 中执行
+
+# ========================================
+# 1. 查看帮助
+# ========================================
+help exact match
+
+# ========================================
+# 2. 运行完整测试套件（推荐）
+# ========================================
+test exact match
+
+# ========================================
+# 3. 手动测试示例
+# ========================================
+
+# 3.1 基本测试
+set input ex bubu 0    # 全部派生
+set input ex bubu 2    # 前2码精确
+set input ex bubu 4    # 全部精确
+set input ex bubu -1   # 全部精确（负数）
+
+# 3.2 清除并重新测试
+clear composition
+set input ex bubu 2
+
+# 3.3 查看候选列表
+print candidate list
+
+# 3.4 选择候选
+select candidate 1
+
+# ========================================
+# 4. 方案切换测试
+# ========================================
+
+# 4.1 查看可用方案
+print schema list
+
+# 4.2 切换到 14键方案（如果有）
+select schema rime_ice_14
+
+# 4.3 切换到标准拼音
+select schema luna_pinyin
+
+# ========================================
+# 5. 对比测试（新旧 API）
+# ========================================
+
+# 5.1 旧 API
+clear composition
+set input bubu
+print candidate list
+
+# 5.2 新 API（等同于旧 API）
+clear composition
+set input ex bubu 0
+print candidate list
+
+# 5.3 新 API（前2码精确）
+clear composition
+set input ex bubu 2
+print candidate list
+
+# ========================================
+# 6. 复杂场景测试
+# ========================================
+
+# 6.1 三音节测试
+clear composition
+set input ex bububi 4
+print candidate list
+
+# 6.2 单音节测试
+clear composition
+set input ex bu 2
+print candidate list
+
+# 6.3 长输入测试
+clear composition
+set input ex bubububu 4
+print candidate list
+
+# ========================================
+# 7. 边界条件测试
+# ========================================
+
+# 7.1 超长 exact_length
+clear composition
+set input ex bubu 100
+print candidate list
+
+# 7.2 负数 exact_length
+clear composition
+set input ex bubu -1
+print candidate list
+
+# 7.3 零长度
+clear composition
+set input ex bubu 0
+print candidate list
+
+# ========================================
+# 8. 上下文测试（可选）
+# ========================================
+
+# 8.1 设置上下文
+set context 我想 | 
+
+# 8.2 测试精确匹配
+set input ex bubu 2
+
+# 8.3 清除上下文
+clear context
+
+# ========================================
+# 9. 退出
+# ========================================
+exit

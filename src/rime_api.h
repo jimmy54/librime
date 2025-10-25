@@ -505,6 +505,15 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                                                  Bool abbreviated);
 
   Bool (*set_input)(RimeSessionId session_id, const char* input);
+  
+  //! Set input string with partial exact match
+  //! \param input_exact_length: Length of prefix that needs exact match
+  //!   = 0: all derivations allowed (default)
+  //!   > 0: first N characters exact match, rest allow derivations
+  //!   < 0: all exact match
+  Bool (*set_input_ex)(RimeSessionId session_id,
+                       const char* input,
+                       int input_exact_length);
 
   void (*get_shared_data_dir_s)(char* dir, size_t buffer_size);
   void (*get_user_data_dir_s)(char* dir, size_t buffer_size);

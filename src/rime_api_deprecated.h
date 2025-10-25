@@ -200,6 +200,15 @@ RIME_DEPRECATED Bool RimeSimulateKeySequence(RimeSessionId session_id,
 
 RIME_DEPRECATED Bool RimeSetInput(RimeSessionId session_id, const char* input);
 
+//! Set input string with partial exact match
+//! \param input_exact_length: Length of prefix that needs exact match
+//!   = 0: all derivations allowed (default)
+//!   > 0: first N characters exact match, rest allow derivations
+//!   < 0: all exact match
+Bool RimeSetInputEx(RimeSessionId session_id,
+                    const char* input,
+                    int input_exact_length);
+
 //! Run a registered task
 RIME_DEPRECATED Bool RimeRunTask(const char* task_name);
 

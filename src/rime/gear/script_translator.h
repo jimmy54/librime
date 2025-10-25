@@ -40,6 +40,9 @@ class ScriptTranslator : public Translator,
   string Spell(const Code& code);
   string GetPrecedingText(size_t start) const;
   bool UpdateElements(const CommitEntry& commit_entry);
+  
+  // V2.1: Access engine for context
+  Engine* engine() const { return engine_; }
 
   bool ConcatenatePhrases(CommitEntry& commit_entry,
                           const vector<an<Phrase>>& phrases);

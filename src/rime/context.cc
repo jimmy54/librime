@@ -281,10 +281,37 @@ void Context::set_composition(Composition&& comp) {
   composition_ = std::move(comp);
 }
 
-void Context::set_input(const string& value) {
+void Context::set_input(const string& value, int input_exact_length) {
   input_ = value;
   caret_pos_ = input_.length();
+  
+  // Handle special values
+  if (input_exact_length < 0) {
+    // Negative: exact match all
+    input_exact_length_ = static_cast<int>(input_.length());
+    DLOG(INFO) << "[V2.1] Context::set_input: negative value, set to length=" 
+               << input_exact_length_;
+  } else if (input_exact_length > static_cast<int>(input_.length())) {
+    // Exceeds input length: limit to input length
+    input_exact_length_ = static_cast<int>(input_.length());
+    DLOG(INFO) << "[V2.1] Context::set_input: exceeds length, limited to=" 
+               << input_exact_length_;
+  } else {
+    input_exact_length_ = input_exact_length;
+    DLOG(INFO) << "[V2.1] Context::set_input: set to=" << input_exact_length_;
+  }
+  
+  DLOG(INFO) << "[V2.1] Context::set_input: input=\"" << value 
+             << "\", requested=" << input_exact_length
+             << ", final input_exact_length_=" << input_exact_length_;
+  
   update_notifier_(this);
+}
+
+bool Context::is_exact_at(size_t pos) const {
+  if (input_exact_length_ <= 0)
+    return false;
+  return pos < static_cast<size_t>(input_exact_length_);
 }
 
 void Context::set_option(const string& name, bool value) {

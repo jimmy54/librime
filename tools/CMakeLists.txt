@@ -9,6 +9,9 @@ set(rime_console_deps
 
 set(rime_api_console_src "rime_api_console.cc")
 add_executable(rime_api_console ${rime_api_console_src})
+# 为Debug模式添加完整的调试信息
+target_compile_options(rime_api_console PRIVATE
+  $<$<CONFIG:Debug>:-O0 -g -ggdb -fno-limit-debug-info -fno-omit-frame-pointer -fstandalone-debug>)
 target_link_libraries(rime_api_console ${rime_console_deps})
 
 set(rime_console_src "rime_console.cc")

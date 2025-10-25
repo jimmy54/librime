@@ -98,6 +98,7 @@ class ScriptSyllabifier : public PhraseSyllabifier {
   bool IsCandidateCorrection(const Phrase& cand) const;
 
   const SyllableGraph& syllable_graph() const { return syllable_graph_; }
+  const string& input() const { return input_; }
 
  protected:
   ScriptTranslator* translator_;
@@ -136,6 +137,23 @@ class ScriptTranslation : public Translation {
   void EnrollEntries(map<int, DictEntryList>& entries_by_end_pos,
                      const an<QueryResult>& query_result);
   an<Sentence> MakeSentence(Dictionary* dict, UserDictionary* user_dict);
+  
+  // V2.1: Check if candidate should be filtered in exact match mode
+  bool ShouldFilterCandidate(const an<Candidate>& cand, Prism* prism);
+  
+  // V2.1: Filter syllable graph for exact match
+  void FilterSyllableGraph(int input_exact_length, Prism* prism);
+  
+  // V2.1: Filter lookup results for exact match
+  template <class QueryResult>
+  void FilterLookupResult(const an<QueryResult>& query_result,
+                         const SyllableGraph& syllable_graph,
+                         size_t start_pos,
+                         Prism* prism,
+                         map<int, DictEntryList>& entries_by_end_pos);
+  string GetSpelling(const SyllableGraph& graph,
+                    size_t start_pos,
+                    size_t end_pos) const;
 
   ScriptTranslator* translator_;
   Poet* poet_;
@@ -445,6 +463,7 @@ static bool has_exact_match_phrase(Ptr ptr, Iter iter, size_t consumed) {
 bool ScriptTranslation::Evaluate(Dictionary* dict, UserDictionary* user_dict) {
   size_t consumed = syllabifier_->BuildSyllableGraph(*dict->prism());
   const auto& syllable_graph = syllabifier_->syllable_graph();
+  
   bool predict_word = translator_->enable_word_completion() &&
                       start_ + consumed == end_of_input_;
 
@@ -650,17 +669,56 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
                                              UserDictionary* user_dict) {
   const int kMaxSyllablesForUserPhraseQuery = 5;
   const auto& syllable_graph = syllabifier_->syllable_graph();
+  
+  // V2.1: Get exact match length from context
+  Engine* engine = translator_->engine();
+  Context* ctx = engine ? engine->context() : nullptr;
+  int input_exact_length = ctx ? ctx->input_exact_length() : 0;
+  
+  DLOG(INFO) << "[V2.1] MakeSentence: input_exact_length=" << input_exact_length;
+  
+  // Get prism for exact match filtering
+  Prism* prism = input_exact_length > 0 ? dict->prism().get() : nullptr;
+  
+  DLOG(INFO) << "[V2.1] MakeSentence: prism=" << (prism ? "available" : "null");
+  
   WordGraph graph;
   for (const auto& x : syllable_graph.edges) {
-    auto& same_start_pos = graph[x.first];
+    size_t start_pos = x.first;
+    
+    // V2.1: Check if exact match is needed at this position
+    bool need_exact = (input_exact_length > 0 && 
+                       start_pos < static_cast<size_t>(input_exact_length));
+    
+    DLOG(INFO) << "[V2.1] Processing start_pos=" << start_pos 
+               << ", need_exact=" << need_exact
+               << " (input_exact_length=" << input_exact_length << ")";
+    
+    auto& same_start_pos = graph[start_pos];
+    
+    // User dictionary lookup
     if (user_dict) {
-      EnrollEntries(same_start_pos,
-                    user_dict->Lookup(syllable_graph, x.first,
-                                      kMaxSyllablesForUserPhraseQuery));
+      auto user_result = user_dict->Lookup(syllable_graph, start_pos,
+                                          kMaxSyllablesForUserPhraseQuery);
+      // V2.1: Filter results in exact match mode
+      if (need_exact && prism) {
+        FilterLookupResult(user_result, syllable_graph, start_pos, 
+                          prism, same_start_pos);
+      } else {
+        EnrollEntries(same_start_pos, user_result);
+      }
     }
-    // merge lookup results
-    EnrollEntries(same_start_pos, dict->Lookup(syllable_graph, x.first,
-                                               &translator_->blacklist()));
+    
+    // System dictionary lookup
+    auto dict_result = dict->Lookup(syllable_graph, start_pos,
+                                    &translator_->blacklist());
+    // V2.1: Filter results in exact match mode
+    if (need_exact && prism) {
+      FilterLookupResult(dict_result, syllable_graph, start_pos, 
+                        prism, same_start_pos);
+    } else {
+      EnrollEntries(same_start_pos, dict_result);
+    }
   }
   if (auto sentence =
           poet_->MakeSentence(graph, syllable_graph.interpreted_length,
@@ -670,6 +728,113 @@ an<Sentence> ScriptTranslation::MakeSentence(Dictionary* dict,
     return sentence;
   }
   return nullptr;
+}
+
+// V2.1: Filter syllable graph for exact match
+// NOTE: This method is currently disabled because modifying the syllable graph
+// causes crashes in other parts of the code that depend on the graph structure.
+// TODO: Implement filtering at the candidate level instead.
+void ScriptTranslation::FilterSyllableGraph(int input_exact_length,
+                                           Prism* prism) {
+  DLOG(INFO) << "[V2.1] FilterSyllableGraph: disabled to avoid crashes";
+  // Do nothing - this approach causes crashes
+  return;
+}
+
+// V2.1: Filter lookup results for exact match
+template <class QueryResult>
+void ScriptTranslation::FilterLookupResult(
+    const an<QueryResult>& query_result,
+    const SyllableGraph& syllable_graph,
+    size_t start_pos,
+    Prism* prism,
+    map<int, DictEntryList>& entries_by_end_pos) {
+  
+  if (!query_result || !prism) {
+    DLOG(INFO) << "[V2.1] FilterLookupResult: early return (query_result=" 
+               << (query_result ? "valid" : "null") 
+               << ", prism=" << (prism ? "valid" : "null") << ")";
+    return;
+  }
+  
+  const string& input = syllabifier_->input();
+  
+  DLOG(INFO) << "[V2.1] FilterLookupResult: start_pos=" << start_pos 
+             << ", input=\"" << input << "\"";
+  
+  // For each end position in query results
+  for (auto& y : *query_result) {
+    size_t end_pos = y.first;
+    
+    // Get the original input substring
+    string original_input = input.substr(start_pos, end_pos - start_pos);
+    
+    DLOG(INFO) << "[V2.1] Checking end_pos=" << end_pos 
+               << ", original_input=\"" << original_input << "\"";
+    
+    // Query prism to get syllable ID(s) for this exact input
+    // Use GetValue to check if this spelling exists in prism
+    hash_set<SyllableId> exact_syllable_ids;
+    int syllable_id_value = 0;
+    if (prism->GetValue(original_input, &syllable_id_value)) {
+      exact_syllable_ids.insert(syllable_id_value);
+      DLOG(INFO) << "[V2.1] Found exact syllable_id=" << syllable_id_value 
+                 << " for input=\"" << original_input << "\"";
+    } else {
+      DLOG(INFO) << "[V2.1] No exact match in prism for input=\"" 
+                 << original_input << "\"";
+    }
+    
+    // If no exact match found in prism, skip this end position
+    if (exact_syllable_ids.empty()) {
+      DLOG(INFO) << "[V2.1] Skipping end_pos=" << end_pos 
+                 << " (no exact syllable IDs)";
+      continue;
+    }
+    
+    DictEntryList& homophones = entries_by_end_pos[end_pos];
+    auto& iter = y.second;
+    
+    int total_entries = 0;
+    int kept_entries = 0;
+    
+    // Iterate through the iterator and filter
+    while (!iter.exhausted()) {
+      auto entry = iter.Peek();
+      total_entries++;
+      if (entry && entry->code.size() > 0) {
+        SyllableId entry_syllable_id = entry->code[0];
+        // Only keep if this entry's syllable ID matches our exact input
+        if (exact_syllable_ids.count(entry_syllable_id) > 0) {
+          homophones.push_back(entry);
+          kept_entries++;
+          DLOG(INFO) << "[V2.1] Kept entry: \"" << entry->text 
+                     << "\" (syllable_id=" << entry_syllable_id << ")";
+        } else {
+          DLOG(INFO) << "[V2.1] Filtered out entry: \"" << entry->text 
+                     << "\" (syllable_id=" << entry_syllable_id 
+                     << " not in exact set)";
+        }
+      }
+      iter.Next();
+    }
+    
+    DLOG(INFO) << "[V2.1] FilterLookupResult summary: end_pos=" << end_pos 
+               << ", total=" << total_entries 
+               << ", kept=" << kept_entries;
+  }
+}
+
+// V2.1: Get spelling string from syllable graph
+string ScriptTranslation::GetSpelling(const SyllableGraph& graph,
+                                     size_t start_pos,
+                                     size_t end_pos) const {
+  size_t length = end_pos - start_pos;
+  const string& input = syllabifier_->input();
+  if (start_pos + length <= input.length()) {
+    return input.substr(start_pos, length);
+  }
+  return string();
 }
 
 }  // namespace rime
