@@ -19,6 +19,8 @@
 #include <rime/switches.h>
 #include <rime/config.h>
 #include <rime/config/plugins.h>
+#include <candidate_action_factory.h>
+#include <rime_candidate_action_api.h>
 
 using namespace rime;
 
@@ -259,8 +261,6 @@ RIME_DEPRECATED void RimeClearContextText(RimeSessionId session_id) {
     ctx->clear_external_context();
 }
 
-// output
-
 static void rime_candidate_copy(RimeCandidate* dest, const an<Candidate>& src) {
   dest->text = new char[src->text().length() + 1];
   std::strcpy(dest->text, src->text().c_str());
@@ -271,7 +271,15 @@ static void rime_candidate_copy(RimeCandidate* dest, const an<Candidate>& src) {
   } else {
     dest->comment = nullptr;
   }
+  
+  // Plugin扩展: 提取动作信息 (使用C API)
   dest->reserved = nullptr;
+  auto& factory = CandidateActionFactory::GetInstance();
+  auto action_ext = factory.ExtractAction(src);
+  if (action_ext && action_ext->has_action()) {
+    // 使用C API转换为C结构体，确保跨平台兼容
+    dest->reserved = rime_candidate_action_from_cpp(action_ext.get());
+  }
 }
 
 RIME_DEPRECATED Bool RimeGetContext(RimeSessionId session_id,

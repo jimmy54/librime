@@ -31,6 +31,7 @@ extern void rime_require_module_octagram();
 extern void rime_require_module_predict();
 extern void rime_require_module_tx();
 extern void rime_require_module_qjs();
+extern void rime_require_module_candidate_action();
 // link to default modules explicitly when building static library.
 void rime_declare_module_dependencies() {
   rime_require_module_core();
@@ -42,6 +43,7 @@ void rime_declare_module_dependencies() {
   rime_require_module_predict();
   rime_require_module_tx();
   rime_require_module_qjs();
+  rime_require_module_candidate_action();
 }
 #endif
 
