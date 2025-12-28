@@ -361,6 +361,11 @@ RIME_DEPRECATED Bool RimeFreeContext(RIME_FLAVORED(RimeContext) * context) {
   for (int i = 0; i < context->menu.num_candidates; ++i) {
     delete[] context->menu.candidates[i].text;
     delete[] context->menu.candidates[i].comment;
+    // 释放候选词的reserved字段（CandidateAction）
+    if (context->menu.candidates[i].reserved) {
+      rime_candidate_action_destroy(
+        static_cast<RimeCandidateAction*>(context->menu.candidates[i].reserved));
+    }
   }
   delete[] context->menu.candidates;
   delete[] context->menu.select_keys;
