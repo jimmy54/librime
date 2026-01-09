@@ -270,16 +270,16 @@ an<ConfigItem> ConfigData::Traverse(const string& node_path) {
   // find the YAML::Node, and wrap it!
   an<ConfigItem> p = root;
   for (auto it = keys.begin(), end = keys.end(); it != end; ++it) {
-    ConfigItem::ValueType node_type = ConfigItem::kMap;
-    size_t list_index = 0;
-    if (IsListItemReference(*it)) {
-      node_type = ConfigItem::kList;
-      list_index = ResolveListIndex(p, *it, true);
-    }
+    const bool is_list_item = IsListItemReference(*it);
+    const ConfigItem::ValueType node_type =
+        is_list_item ? ConfigItem::kList : ConfigItem::kMap;
+
     if (!p || p->type() != node_type) {
       return nullptr;
     }
-    if (node_type == ConfigItem::kList) {
+
+    if (is_list_item) {
+      size_t list_index = ResolveListIndex(p, *it, true);
       p = As<ConfigList>(p)->GetAt(list_index);
     } else {
       p = As<ConfigMap>(p)->Get(*it);
