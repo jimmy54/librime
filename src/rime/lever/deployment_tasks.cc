@@ -181,9 +181,19 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     LOG(ERROR) << "Error loading default config.";
     return false;
   }
-  auto schema_list = config->GetList("schema_list");
+  an<ConfigList> schema_list;
+  try {
+    schema_list = config->GetList("schema_list");
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "exception while reading schema_list: " << e.what();
+    return false;
+  }
   if (!schema_list) {
-    LOG(WARNING) << "schema list not defined.";
+    LOG(ERROR) << "schema_list node is missing or not a list in default.yaml.";
+    return false;
+  }
+  if (schema_list->size() == 0) {
+    LOG(WARNING) << "schema list is empty.";
     return false;
   }
 
@@ -224,35 +234,38 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       ++failure;
   };
   auto schema_component = Config::Require("schema");
-  for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
-    if (!*it) {
-      LOG(WARNING) << "null schema item in schema_list, skipped.";
-      continue;
-    }
+  try {
+    for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
+      if (!*it) {
+        LOG(WARNING) << "null schema item in schema_list, skipped.";
+        continue;
+      }
 
-    auto item = As<ConfigMap>(*it);
-    if (!item) {
-      LOG(WARNING) << "invalid schema item format (not a map), skipped.";
-      continue;
-    }
+      auto item = As<ConfigMap>(*it);
+      if (!item) {
+        LOG(WARNING) << "invalid schema item format (not a map), skipped.";
+        continue;
+      }
 
-    auto schema_property = item->GetValue("schema");
-    if (!schema_property) {
-      LOG(WARNING) << "schema item missing 'schema' property, skipped.";
-      continue;
-    }
+      auto schema_property = item->GetValue("schema");
+      if (!schema_property) {
+        LOG(WARNING) << "schema item missing 'schema' property, skipped.";
+        continue;
+      }
 
-    const string& schema_id = schema_property->str();
-    if (schema_id.empty()) {
-      LOG(WARNING) << "empty schema_id, skipped.";
-      continue;
-    }
+      const string& schema_id = schema_property->str();
+      if (schema_id.empty()) {
+        LOG(WARNING) << "empty schema_id, skipped.";
+        continue;
+      }
 
-    build_schema(schema_id);
-    the<Config> schema_config(schema_component->Create(schema_id));
-    if (!schema_config)
-      continue;
-    if (auto dependencies = schema_config->GetList("schema/dependencies")) {
+      build_schema(schema_id);
+      the<Config> schema_config(schema_component->Create(schema_id));
+      if (!schema_config)
+        continue;
+      auto dependencies = schema_config->GetList("schema/dependencies");
+      if (!dependencies)
+        continue;
       for (auto d = dependencies->begin(); d != dependencies->end(); ++d) {
         if (!*d) {
           LOG(WARNING) << "null dependency item for schema: " << schema_id
@@ -278,6 +291,9 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
         build_schema(dependency_id, as_dependency);
       }
     }
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "exception while updating schemas: " << e.what();
+    return false;
   }
 
   LOG(INFO) << "finished updating schemas: " << success << " success, "
