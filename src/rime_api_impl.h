@@ -271,7 +271,7 @@ static void rime_candidate_copy(RimeCandidate* dest, const an<Candidate>& src) {
   } else {
     dest->comment = nullptr;
   }
-  
+
   // Plugin扩展: 提取动作信息 (使用C API)
   dest->reserved = nullptr;
   auto& factory = CandidateActionFactory::GetInstance();
@@ -363,8 +363,8 @@ RIME_DEPRECATED Bool RimeFreeContext(RIME_FLAVORED(RimeContext) * context) {
     delete[] context->menu.candidates[i].comment;
     // 释放候选词的reserved字段（CandidateAction）
     if (context->menu.candidates[i].reserved) {
-      rime_candidate_action_destroy(
-        static_cast<RimeCandidateAction*>(context->menu.candidates[i].reserved));
+      rime_candidate_action_destroy(static_cast<RimeCandidateAction*>(
+          context->menu.candidates[i].reserved));
     }
   }
   delete[] context->menu.candidates;
