@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <utf8.h>
 #include <utility>
+#include <atomic>
+#include <mutex>
 #include <rime/candidate.h>
 #include <rime/common.h>
 #include <rime/config.h>
@@ -35,29 +37,85 @@ class Opencc {
       : initialized_(false), config_path_(config_path) {}
 
   void Initialize() {
-    if (initialized_)
+    // 🔥 使用双重检查锁定模式
+    if (initialized_.load(std::memory_order_acquire))
       return;
-    initialized_ = true;
+    
+    std::lock_guard<std::mutex> lock(init_mutex_);
+    
+    // 再次检查，防止重复初始化
+    if (initialized_.load(std::memory_order_acquire))
+      return;
+    
     opencc::Config config;
     try {
       // opencc accepts file path encoded in UTF-8.
       converter_ = config.NewFromFile(config_path_.u8string());
+      
+      // 🔥 添加空指针检查
+      if (!converter_) {
+        LOG(ERROR) << "opencc converter is null after initialization";
+        converter_.reset();
+        dict_.reset();
+        return;
+      }
 
-      const list<opencc::ConversionPtr> conversions =
-          converter_->GetConversionChain()->GetConversions();
+      auto chain = converter_->GetConversionChain();
+      if (!chain) {
+        LOG(ERROR) << "opencc conversion chain is null after initialization";
+        converter_.reset();
+        dict_.reset();
+        return;
+      }
+
+      const list<opencc::ConversionPtr> conversions = chain->GetConversions();
+      
+      // 🔥 检查转换链
+      if (conversions.empty()) {
+        LOG(ERROR) << "opencc conversions chain is empty";
+        converter_.reset();
+        dict_.reset();
+        return;
+      }
+      
       dict_ = conversions.front()->GetDict();
+      
+      // 🔥 只有在完全成功后才设置标志
+      initialized_.store(true, std::memory_order_release);
+      
+    } catch (const std::exception& e) {
+      LOG(ERROR) << "opencc initialization failed: " << e.what() 
+                 << ", path: " << config_path_;
+      converter_.reset();
+      dict_.reset();
     } catch (...) {
       LOG(ERROR) << "opencc config not found: " << config_path_;
+      converter_.reset();
+      dict_.reset();
     }
   }
 
   bool ConvertWord(const string& text, vector<string>* forms) {
     Initialize();
-    if (converter_ == nullptr) {
+    
+    // 🔥 添加完整的初始化检查
+    if (!initialized_.load(std::memory_order_acquire) || converter_ == nullptr) {
+      LOG(WARNING) << "opencc not properly initialized, skipping conversion";
       return false;
     }
-    const list<opencc::ConversionPtr> conversions =
-        converter_->GetConversionChain()->GetConversions();
+    
+    // 🔥 检查转换链是否有效
+    auto chain = converter_->GetConversionChain();
+    if (!chain) {
+      LOG(ERROR) << "opencc conversion chain is null";
+      return false;
+    }
+    
+    const list<opencc::ConversionPtr> conversions = chain->GetConversions();
+    if (conversions.empty()) {
+      LOG(WARNING) << "opencc conversions list is empty";
+      return false;
+    }
     vector<string> original_words{text};
     bool matched = false;
     for (auto conversion : conversions) {
@@ -118,10 +176,26 @@ class Opencc {
 
   bool RandomConvertText(const string& text, string* simplified) {
     Initialize();
-    if (dict_ == nullptr)
+    
+    // 🔥 添加完整的初始化检查
+    if (!initialized_.load(std::memory_order_acquire) || 
+        converter_ == nullptr || dict_ == nullptr) {
+      LOG(WARNING) << "opencc not properly initialized, skipping conversion";
       return false;
-    const list<opencc::ConversionPtr> conversions =
-        converter_->GetConversionChain()->GetConversions();
+    }
+    
+    // 🔥 检查转换链是否有效
+    auto chain = converter_->GetConversionChain();
+    if (!chain) {
+      LOG(ERROR) << "opencc conversion chain is null";
+      return false;
+    }
+    
+    const list<opencc::ConversionPtr> conversions = chain->GetConversions();
+    if (conversions.empty()) {
+      LOG(WARNING) << "opencc conversions list is empty";
+      return false;
+    }
     const char* phrase = text.c_str();
     for (auto conversion : conversions) {
       opencc::DictPtr dict = conversion->GetDict();
@@ -138,8 +212,16 @@ class Opencc {
           buffer << opencc::UTF8Util::FromSubstr(pstr, matched_length);
         } else {
           matched_length = matched.Get()->KeyLength();
-          size_t i = rand() % (matched.Get()->NumValues());
-          buffer << matched.Get()->Values().at(i);
+          // 🔥 检查值数量避免除零错误
+          size_t num_values = matched.Get()->NumValues();
+          if (num_values == 0) {
+            LOG(WARNING) << "matched entry has no values";
+            matched_length = opencc::UTF8Util::NextCharLength(pstr);
+            buffer << opencc::UTF8Util::FromSubstr(pstr, matched_length);
+          } else {
+            size_t i = rand() % num_values;
+            buffer << matched.Get()->Values().at(i);
+          }
         }
         pstr += matched_length;
       }
@@ -151,14 +233,19 @@ class Opencc {
 
   bool ConvertText(const string& text, string* simplified) {
     Initialize();
-    if (converter_ == nullptr)
+    
+    // 🔥 添加初始化检查
+    if (!initialized_.load(std::memory_order_acquire) || converter_ == nullptr) {
+      LOG(WARNING) << "opencc not properly initialized, skipping conversion";
       return false;
+    }
     *simplified = converter_->Convert(text);
     return *simplified != text;
   }
 
  private:
-  bool initialized_;
+  std::atomic<bool> initialized_;  // 🔥 改为原子类型
+  std::mutex init_mutex_;           // 🔥 新增互斥锁
   path config_path_;
   opencc::ConverterPtr converter_;
   opencc::DictPtr dict_;
@@ -236,11 +323,29 @@ void Simplifier::PushBack(const an<Candidate>& original,
                           const string& simplified) {
   string tips;
   string text;
-  size_t length = utf8::unchecked::distance(
-      original->text().c_str(),
-      original->text().c_str() + original->text().length());
+  
+  // 🔥 使用安全的UTF-8距离计算
+  size_t length = 0;
+  bool utf8_ok = true;
+  try {
+    const char* start = original->text().c_str();
+    const char* end = start + original->text().length();
+    
+    // 验证UTF-8有效性
+    if (!utf8::is_valid(start, end)) {
+      LOG(ERROR) << "Invalid UTF-8 in candidate text";
+      utf8_ok = false;
+    }
+    
+    if (utf8_ok) {
+      length = utf8::distance(start, end);
+    }
+  } catch (const utf8::exception& e) {
+    LOG(ERROR) << "UTF-8 processing error: " << e.what();
+    utf8_ok = false;
+  }
   bool show_tips =
-      (tips_level_ == kTipsChar && length == 1) || tips_level_ == kTipsAll;
+      utf8_ok && ((tips_level_ == kTipsChar && length == 1) || tips_level_ == kTipsAll);
   if (show_in_comment_) {
     text = original->text();
     if (show_tips) {
@@ -263,6 +368,23 @@ void Simplifier::PushBack(const an<Candidate>& original,
 
 bool Simplifier::Convert(const an<Candidate>& original,
                          CandidateQueue* result) {
+  // 🔥 添加空指针检查
+  if (!original) {
+    LOG(ERROR) << "Simplifier::Convert: original candidate is null";
+    return false;
+  }
+  
+  if (!opencc_) {
+    LOG(ERROR) << "Simplifier::Convert: opencc is not initialized";
+    return false;
+  }
+  
+  // 🔥 检查文本有效性
+  if (original->text().empty()) {
+    LOG(WARNING) << "Simplifier::Convert: original text is empty";
+    return false;
+  }
+  
   if (excluded_types_.find(original->type()) != excluded_types_.end()) {
     return false;
   }

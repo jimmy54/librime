@@ -188,6 +188,7 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   }
 
   LOG(INFO) << "updating schemas.";
+
   int success = 0;
   int failure = 0;
   map<string, path> schemas;
@@ -196,7 +197,9 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
+
     LOG(INFO) << "schema: " << schema_id;
+
     path schema_path;
     if (schemas.find(schema_id) == schemas.end()) {
       schema_path = resolver->ResolvePath(schema_id);
@@ -222,28 +225,60 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   };
   auto schema_component = Config::Require("schema");
   for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
+    // 🔥 检查迭代器指向的元素是否为空
+    if (!*it) {
+      LOG(WARNING) << "null schema item in schema_list, skipped.";
+      continue;
+    }
+    
     auto item = As<ConfigMap>(*it);
-    if (!item)
+    if (!item) {
+      LOG(WARNING) << "invalid schema item format (not a map), skipped.";
       continue;
+    }
+    
     auto schema_property = item->GetValue("schema");
-    if (!schema_property)
+    if (!schema_property) {
+      LOG(WARNING) << "schema item missing 'schema' property, skipped.";
       continue;
+    }
+    
     const string& schema_id = schema_property->str();
+    if (schema_id.empty()) {
+      LOG(WARNING) << "empty schema_id, skipped.";
+      continue;
+    }
+    
     build_schema(schema_id);
     the<Config> schema_config(schema_component->Create(schema_id));
     if (!schema_config)
       continue;
     if (auto dependencies = schema_config->GetList("schema/dependencies")) {
       for (auto d = dependencies->begin(); d != dependencies->end(); ++d) {
-        auto dependency = As<ConfigValue>(*d);
-        if (!dependency)
+        // 🔥 检查依赖项元素是否为空
+        if (!*d) {
+          LOG(WARNING) << "null dependency item for schema: " << schema_id << ", skipped.";
           continue;
+        }
+        
+        auto dependency = As<ConfigValue>(*d);
+        if (!dependency) {
+          LOG(WARNING) << "invalid dependency format for schema: " << schema_id << ", skipped.";
+          continue;
+        }
+        
         const string& dependency_id = dependency->str();
+        if (dependency_id.empty()) {
+          LOG(WARNING) << "empty dependency_id for schema: " << schema_id << ", skipped.";
+          continue;
+        }
+        
         bool as_dependency = true;
         build_schema(dependency_id, as_dependency);
       }
     }
   }
+
   LOG(INFO) << "finished updating schemas: " << success << " success, "
             << failure << " failure.";
 
