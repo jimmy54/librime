@@ -104,12 +104,15 @@ bool Prism::Load() {
   format_ = atof(&metadata_->format[kPrismFormatPrefixLen]);
 
   // 版本檢查: 強制重構舊版本
+  //这里与主线不同，不强制版本。兼容3.0
+  /*
   if (format_ < kPrismFormatVersion - DBL_EPSILON) {
     LOG(INFO) << "prism format " << format_ << " is too old. upgrading to "
               << kPrismFormatVersion;
     Close();
     return false;
   }
+  */
 
   char* array = metadata_->double_array.get();
   if (!array) {
