@@ -204,6 +204,10 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
   map<string, path> schemas;
   the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
       {"schema_source_file", "", ".schema.yaml"}));
+  if (!resolver) {
+    LOG(ERROR) << "failed to create resource resolver for schema source files.";
+    return false;
+  }
   auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
@@ -234,6 +238,10 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       ++failure;
   };
   auto schema_component = Config::Require("schema");
+  if (!schema_component) {
+    LOG(ERROR) << "schema component is unavailable.";
+    return false;
+  }
   try {
     for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
       if (!*it) {
