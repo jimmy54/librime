@@ -16,3 +16,21 @@
 [submodule "opencc"]
 	path = deps/opencc
 	url = https://github.com/BYVoid/OpenCC.git
+[submodule "plugins/candidate-action"]
+	path = plugins/candidate-action
+	url = https://github.com/jimmy54/candidate-action.git
+[submodule "plugins/lua"]
+	path = plugins/lua
+	url = https://github.com/jimmy54/librime-lua.git
+[submodule "plugins/octagram"]
+	path = plugins/octagram
+	url = https://github.com/jimmy54/librime-octagram.git
+[submodule "plugins/predict"]
+	path = plugins/predict
+	url = https://github.com/jimmy54/librime-predict.git
+[submodule "plugins/qjs"]
+	path = plugins/qjs
+	url = https://github.com/jimmy54/librime-qjs.git
+[submodule "plugins/tx"]
+	path = plugins/tx
+	url = https://github.com/jimmy54/librime-tx.git
