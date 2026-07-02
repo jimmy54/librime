@@ -49,6 +49,7 @@ jobs:
             set CFLAGS=${{ matrix.mflag }}
             set CXXFLAGS=${{ matrix.mflag }}
             set RC=rc
+            set common_cmake_flags=-DCMAKE_RC_COMPILER=rc.exe
             set CMAKE_GENERATOR=Ninja
           "@
           Set-Content -Path $envfile -Value $envcontent
