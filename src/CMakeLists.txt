@@ -35,6 +35,15 @@ else()
       ${rime_plugins_objs})
 endif()
 
+# rime_api.cc 直接引用 candidate-action 的实现（本 fork 的定制）。
+# 静态构建时这两个源文件由 bimkit 编译提供（保持移动端现状、避免重复符号）；
+# 共享库/工具链接则需在 rime 本体内提供，否则 rime.dll 出现未解析符号。
+if(BUILD_SHARED_LIBS)
+  list(APPEND rime_src
+    ${PROJECT_SOURCE_DIR}/plugins/candidate-action/src/candidate_action_ext.cc
+    ${PROJECT_SOURCE_DIR}/plugins/candidate-action/src/rime_candidate_action_api.cc)
+endif()
+
 set(rime_optional_deps "")
 if(Gflags_FOUND)
   set(rime_optional_deps ${rime_optional_deps} ${Gflags_LIBRARY})
