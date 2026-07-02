@@ -21,12 +21,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # bimkit 消费的是 msvc 静态构建；clang/mingw 变体非本 fork 支持目标
-        compiler: [msvc]
+        # qjs 依赖 GNU 扩展，cl.exe 编不过；统一 clang-cl（MSVC ABI 兼容）
+        compiler: [clang-cl]
         arch: [x64]
         include:
-          - { compiler: msvc, cc: cl, cxx: cl }
-          - { compiler: msvc, arch: x86, cross_arch: x64_x86 }
+          - { compiler: clang-cl, cc: clang-cl, cxx: clang-cl }
+          - { compiler: clang-cl, arch: x86, cross_arch: x64_x86, mflag: -m32 }
     env:
       boost_version: 1.89.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost-1.89.0
@@ -46,13 +46,14 @@ jobs:
             set RIME_ROOT=%CD%
             set CXX=${{ matrix.cxx }}
             set CC=${{ matrix.cc }}
+            set CFLAGS=${{ matrix.mflag }}
+            set CXXFLAGS=${{ matrix.mflag }}
             set CMAKE_GENERATOR=Ninja
           "@
           Set-Content -Path $envfile -Value $envcontent
           cat $envfile
           
-      - name: Configure MSVC
-        if: ${{ matrix.compiler == 'msvc' }}
+      - name: Configure MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.cross_arch || matrix.arch }}
@@ -61,7 +62,6 @@ jobs:
         run: pip install ninja
 
       - name: Configure clang
-        if: ${{ matrix.compiler == 'clang' }}
         run: choco upgrade -y llvm
 
       - name: Configure build environment
