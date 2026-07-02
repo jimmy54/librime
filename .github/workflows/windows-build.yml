@@ -37,6 +37,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: ${{ inputs.repository || github.repository }}
+          token: ${{ secrets.BIM_REPOS_TOKEN || github.token }}
           submodules: recursive
 
       - name: Create env.bat
