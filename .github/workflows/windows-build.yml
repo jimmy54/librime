@@ -48,6 +48,7 @@ jobs:
             set CC=${{ matrix.cc }}
             set CFLAGS=${{ matrix.mflag }}
             set CXXFLAGS=${{ matrix.mflag }}
+            set RC=rc
             set CMAKE_GENERATOR=Ninja
           "@
           Set-Content -Path $envfile -Value $envcontent
