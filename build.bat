@@ -109,6 +109,7 @@ set common_cmake_flags=%common_cmake_flags%^
 
 set deps_cmake_flags=%common_cmake_flags%^
   -DBUILD_SHARED_LIBS:BOOL=OFF^
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5^
   -DCMAKE_INSTALL_PREFIX:PATH="%deps_install_prefix%"
 
 if %build_deps% == 1 (
