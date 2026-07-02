@@ -26,7 +26,7 @@ jobs:
         arch: [x64]
         include:
           - { compiler: clang-cl, cc: clang-cl, cxx: clang-cl }
-          - { compiler: clang-cl, arch: x86, cross_arch: x64_x86, mflag: -m32 }
+          - { compiler: clang-cl, arch: x86, cross_arch: x64_x86, mflag: -m32, cc: clang-cl, cxx: clang-cl }
     env:
       boost_version: 1.89.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost-1.89.0
