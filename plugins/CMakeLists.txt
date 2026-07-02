@@ -33,6 +33,12 @@ else()
   file(GLOB plugin_files "*")
   foreach(file ${plugin_files})
     if(IS_DIRECTORY ${file})
+      # qjs 依赖零长数组等 GNU 扩展，MSVC 无法编译；Windows/MSVC 构建暂不包含
+      # （方案数据未引用 JS；如需补回可改用 clang-cl 工具链）
+      if(MSVC AND file MATCHES "qjs$")
+        message(STATUS "Skipping plugin (unsupported by MSVC): ${file}")
+        continue()
+      endif()
       message(STATUS "Found plugin: ${file}")
       set(plugins ${plugins} ${file})
     endif()
