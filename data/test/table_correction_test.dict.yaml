@@ -1,0 +1,19 @@
+# Minimal table dictionary for table_translator correction tests.
+# Codes are chosen so NearSearchCorrector (QWERTY adjacency) can recover typos.
+# encoding: utf-8
+---
+name: table_correction_test
+version: "0.1"
+sort: by_weight
+...
+
+# aaaa <-> saaa (s is adjacent to a)
+工	aaaa	1000
+模式	saaa	900
+
+# asdf exact; ads f has d↔s / s↔a style neighbors used in cases below
+测试	asdf	800
+测试乙	adsf	700
+
+# isolated code with no close neighbors in this tiny syllabary
+远码	qwer	600
