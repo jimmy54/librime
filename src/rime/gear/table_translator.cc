@@ -16,6 +16,7 @@
 #include <rime/engine.h>
 #include <rime/schema.h>
 #include <rime/translation.h>
+#include <rime/dict/corrector.h>
 #include <rime/dict/dictionary.h>
 #include <rime/dict/user_dictionary.h>
 #include <rime/gear/charset_filter.h>
@@ -27,6 +28,9 @@
 namespace rime {
 
 static const char* kUnitySymbol = " \xe2\x98\xaf ";
+// log(0.01); aligned with syllabifier / script_translator correction penalty
+static const double kCorrectionCredibility = -4.605170185988091;
+static const size_t kMaxCorrections = 4;
 
 // TableTranslation
 
@@ -221,6 +225,7 @@ TableTranslator::TableTranslator(const Ticket& ticket)
     config->GetBool(name_space_ + "/enable_encoder", &enable_encoder_);
     config->GetBool(name_space_ + "/encode_commit_history",
                     &encode_commit_history_);
+    config->GetBool(name_space_ + "/enable_correction", &enable_correction_);
     config->GetInt(name_space_ + "/max_phrase_length", &max_phrase_length_);
     config->GetInt(name_space_ + "/max_homographs", &max_homographs_);
     if (enable_sentence_ || sentence_over_completion_ ||
@@ -232,7 +237,14 @@ TableTranslator::TableTranslator(const Ticket& ticket)
     encoder_.reset(new UnityTableEncoder(user_dict_.get()));
     encoder_->Load(ticket);
   }
+  if (enable_correction_) {
+    if (auto* corrector = Corrector::Require("corrector")) {
+      corrector_.reset(corrector->Create(ticket));
+    }
+  }
 }
+
+TableTranslator::~TableTranslator() = default;
 
 static bool starts_with_completion(an<Translation> translation) {
   if (!translation)
@@ -298,6 +310,12 @@ an<Translation> TableTranslator::Query(const string& input,
       translation = sentence + translation;
     }
   }
+  if (enable_correction_ && corrector_) {
+    if (auto correction = MakeCorrectionTranslation(
+            code, segment.start, segment.start + input.length(), preedit)) {
+      translation = translation ? translation + correction : correction;
+    }
+  }
   if (translation && translation->exhausted()) {
     return nullptr;
   }
@@ -306,6 +324,88 @@ an<Translation> TableTranslator::Query(const string& input,
     return poet_->ContextualWeighted(translation, input, segment.start, this);
   }
   return translation;
+}
+
+an<Translation> TableTranslator::MakeCorrectionTranslation(
+    const string& code,
+    size_t start,
+    size_t end,
+    const string& preedit) {
+  if (code.empty() || !dict_ || !dict_->loaded() || !corrector_)
+    return nullptr;
+
+  auto& prism = *dict_->prism();
+  set<SyllableId> exact_match_spellings;
+  Prism::Match exact{0, 0};
+  if (prism.GetValue(code, &exact.value)) {
+    exact_match_spellings.insert(exact.value);
+  }
+
+  corrector::Corrections corrections;
+  corrector_->ToleranceSearch(prism, code, &corrections, 5);
+  if (corrections.empty())
+    return nullptr;
+
+  string formatted_preedit = preedit;
+  preedit_formatter_.Apply(&formatted_preedit);
+
+  auto result = New<FifoTranslation>();
+  size_t correction_count = 0;
+  hash_set<string> seen_text;
+
+  for (const auto& item : corrections) {
+    if (correction_count >= kMaxCorrections)
+      break;
+    if (exact_match_spellings.count(item.first))
+      continue;
+    // full-code correction only for Query
+    if (item.second.length != code.length())
+      continue;
+
+    for (auto accessor = prism.QuerySpelling(item.first); !accessor.exhausted();
+         accessor.Next()) {
+      if (correction_count >= kMaxCorrections)
+        break;
+      auto props = accessor.properties();
+      if (props.type != kNormalSpelling || props.is_correction)
+        continue;
+
+      string corrected =
+          dict_->primary_table()->GetSyllableById(accessor.syllable_id());
+      if (corrected.empty() || corrected == code)
+        continue;
+
+      DictEntryIterator iter;
+      if (!dict_->LookupWords(&iter, corrected, false, 0, &blacklist()) ||
+          iter.exhausted()) {
+        continue;
+      }
+
+      while (!iter.exhausted() && correction_count < kMaxCorrections) {
+        auto entry = iter.Peek();
+        if (entry && !seen_text.count(entry->text)) {
+          seen_text.insert(entry->text);
+          auto adjusted = New<DictEntry>(*entry);
+          adjusted->weight += kCorrectionCredibility;
+          auto phrase =
+              New<Phrase>(language(), "corrected", start, end, adjusted);
+          phrase->set_preedit(formatted_preedit);
+          string comment = corrected;
+          comment_formatter_.Apply(&comment);
+          phrase->set_comment(comment);
+          phrase->set_quality(std::exp(adjusted->weight) + initial_quality());
+          result->Append(phrase);
+          ++correction_count;
+        }
+        if (!iter.Next())
+          break;
+      }
+    }
+  }
+
+  if (result->exhausted())
+    return nullptr;
+  return result;
 }
 
 bool TableTranslator::Memorize(const CommitEntry& commit_entry) {

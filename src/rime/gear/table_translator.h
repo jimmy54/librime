@@ -19,6 +19,7 @@
 
 namespace rime {
 
+class Corrector;
 class Poet;
 class UnityTableEncoder;
 
@@ -27,6 +28,7 @@ class TableTranslator : public Translator,
                         public TranslatorOptions {
  public:
   TableTranslator(const Ticket& ticket);
+  virtual ~TableTranslator();
 
   virtual an<Translation> Query(const string& input, const Segment& segment);
   virtual bool Memorize(const CommitEntry& commit_entry);
@@ -38,15 +40,22 @@ class TableTranslator : public Translator,
   UnityTableEncoder* encoder() const { return encoder_.get(); }
 
  protected:
+  an<Translation> MakeCorrectionTranslation(const string& code,
+                                            size_t start,
+                                            size_t end,
+                                            const string& preedit);
+
   bool enable_charset_filter_ = false;
   bool enable_encoder_ = false;
   bool enable_sentence_ = true;
   bool sentence_over_completion_ = false;
   bool encode_commit_history_ = true;
+  bool enable_correction_ = false;
   int max_phrase_length_ = 5;
   int max_homographs_ = 1;
   the<Poet> poet_;
   the<UnityTableEncoder> encoder_;
+  the<Corrector> corrector_;
 };
 
 class TableTranslation : public Translation {

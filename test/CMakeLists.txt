@@ -1,11 +1,26 @@
+# Prefer bundled gtest headers over Homebrew (/opt/homebrew/include).
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/include)
+
 aux_source_directory(. rime_test_src)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/test)
 add_executable(rime_test ${rime_test_src})
+
+# Homebrew Boost adds /opt/homebrew/include early; that can shadow bundled
+# gtest headers. Prefer linking the Homebrew gtest that matches those headers.
+find_library(RIME_TEST_GTEST gtest
+             PATHS /opt/homebrew/lib /usr/local/lib
+             NO_DEFAULT_PATH)
+if(RIME_TEST_GTEST)
+  set(RIME_TEST_GTEST_LIBS ${RIME_TEST_GTEST})
+else()
+  set(RIME_TEST_GTEST_LIBS ${GTEST_LIBRARIES})
+endif()
+
 target_link_libraries(rime_test
   ${rime_library}
   ${rime_dict_library}
   ${rime_gears_library}
-  ${GTEST_LIBRARIES})
+  ${RIME_TEST_GTEST_LIBS})
 if(BUILD_SHARED_LIBS)
   target_compile_definitions(rime_test PRIVATE RIME_IMPORTS)
 endif(BUILD_SHARED_LIBS)
