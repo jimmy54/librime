@@ -17,6 +17,10 @@
 #include <rime/setup.h>
 #include <rime/signature.h>
 #include <rime/switches.h>
+#include <rime/config.h>
+#include <rime/config/plugins.h>
+#include <candidate_action_factory.h>
+#include <rime_candidate_action_api.h>
 
 using namespace rime;
 
@@ -135,6 +139,47 @@ RIME_DEPRECATED Bool RimeDeployConfigFile(const char* file_name,
   return Bool(deployer.RunTask("config_file_update", args));
 }
 
+RIME_DEPRECATED Bool RimeCompileConfigFile(const char* src_path,
+                                           const char* dest_path,
+                                           const char* file_name) {
+  // Ensure destination directory exists
+  std::filesystem::path dest_dir(dest_path);
+  if (!std::filesystem::exists(dest_dir)) {
+    std::filesystem::create_directories(dest_dir);
+    LOG(INFO) << "Created destination directory: " << dest_path;
+  }
+
+  // Create config builder
+  auto config_builder = new ConfigComponent<ConfigBuilder>(
+      [&](ConfigBuilder* builder) {
+        builder->InstallPlugin(new AutoPatchConfigPlugin);
+        builder->InstallPlugin(new DefaultConfigPlugin);
+        builder->InstallPlugin(new LegacyPresetConfigPlugin);
+        builder->InstallPlugin(new LegacyDictionaryConfigPlugin);
+        builder->InstallPlugin(new BuildInfoPlugin);
+        builder->InstallPlugin(new SaveOutputPlugin(dest_path));
+      },
+      src_path);
+
+  // Compile file
+  LOG(INFO) << "Compiling YAML file: " << file_name;
+  LOG(INFO) << "Source path: " << src_path;
+  LOG(INFO) << "Destination path: " << dest_path;
+
+  Config* config = config_builder->Create(file_name);
+  bool result = (config != nullptr);
+
+  if (result) {
+    LOG(INFO) << "✓ Compilation successful!";
+  } else {
+    LOG(ERROR) << "✗ Compilation failed!";
+  }
+
+  delete config;
+  delete config_builder;
+  return result;
+}
+
 RIME_DEPRECATED Bool RimeSyncUserData() {
   Service::instance().CleanupAllSessions();
   Deployer& deployer(Service::instance().deployer());
@@ -191,7 +236,30 @@ RIME_DEPRECATED void RimeClearComposition(RimeSessionId session_id) {
   session->ClearComposition();
 }
 
-// output
+// context
+
+RIME_DEPRECATED Bool RimeSetContextText(RimeSessionId session_id,
+                                        const char* preceding_text,
+                                        const char* following_text) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return False;
+  Context* ctx = session->context();
+  if (!ctx)
+    return False;
+  ctx->set_external_context(preceding_text ? preceding_text : "",
+                            following_text ? following_text : "");
+  return True;
+}
+
+RIME_DEPRECATED void RimeClearContextText(RimeSessionId session_id) {
+  an<Session> session(Service::instance().GetSession(session_id));
+  if (!session)
+    return;
+  Context* ctx = session->context();
+  if (ctx)
+    ctx->clear_external_context();
+}
 
 static void rime_candidate_copy(RimeCandidate* dest, const an<Candidate>& src) {
   dest->text = new char[src->text().length() + 1];
@@ -203,7 +271,15 @@ static void rime_candidate_copy(RimeCandidate* dest, const an<Candidate>& src) {
   } else {
     dest->comment = nullptr;
   }
+
+  // Plugin扩展: 提取动作信息 (使用C API)
   dest->reserved = nullptr;
+  auto& factory = CandidateActionFactory::GetInstance();
+  auto action_ext = factory.ExtractAction(src);
+  if (action_ext && action_ext->has_action()) {
+    // 使用C API转换为C结构体，确保跨平台兼容
+    dest->reserved = rime_candidate_action_from_cpp(action_ext.get());
+  }
 }
 
 RIME_DEPRECATED Bool RimeGetContext(RimeSessionId session_id,
@@ -289,6 +365,11 @@ RIME_DEPRECATED Bool RimeFreeContext(RIME_FLAVORED(RimeContext) * context) {
   for (int i = 0; i < context->menu.num_candidates; ++i) {
     delete[] context->menu.candidates[i].text;
     delete[] context->menu.candidates[i].comment;
+    // 释放候选词的reserved字段（CandidateAction）
+    if (context->menu.candidates[i].reserved) {
+      rime_candidate_action_destroy(static_cast<RimeCandidateAction*>(
+          context->menu.candidates[i].reserved));
+    }
   }
   delete[] context->menu.candidates;
   delete[] context->menu.select_keys;
@@ -350,6 +431,7 @@ RIME_DEPRECATED Bool RimeGetStatus(RimeSessionId session_id,
   std::strcpy(status->schema_name, schema->schema_name().c_str());
   status->is_disabled = Bool(Service::instance().disabled());
   status->is_composing = Bool(ctx->IsComposing());
+  status->is_predicting = Bool(ctx->IsPredicting());
   status->is_ascii_mode = Bool(ctx->get_option("ascii_mode"));
   status->is_full_shape = Bool(ctx->get_option("full_shape"));
   status->is_simplified = Bool(ctx->get_option("simplification"));
@@ -1199,6 +1281,8 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.process_key = &RimeProcessKey;
     s_api.commit_composition = &RimeCommitComposition;
     s_api.clear_composition = &RimeClearComposition;
+    s_api.set_context_text = &RimeSetContextText;
+    s_api.clear_context_text = &RimeClearContextText;
     s_api.get_commit = &RimeGetCommit;
     s_api.free_commit = &RimeFreeCommit;
     s_api.get_context = &RimeGetContext;
@@ -1277,6 +1361,7 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.highlight_candidate_on_current_page =
         &RimeHighlightCandidateOnCurrentPage;
     s_api.change_page = &RimeChangePage;
+    s_api.compile_config_file = &RimeCompileConfigFile;
     s_api.get_candidate_preview = &RimeGetCandidatePreview;
     s_api.free_candidate_preview = &RimeFreeCandidatePreview;
   }

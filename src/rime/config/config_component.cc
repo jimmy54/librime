@@ -167,7 +167,7 @@ const ResourceType UserConfigResourceProvider::kDefaultResourceType = {
 
 ResourceResolver* UserConfigResourceProvider::CreateResourceResolver(
     const ResourceType& resource_type) {
-  return Service::instance().CreateUserSpecificResourceResolver(resource_type);
+  return Service::instance().CreateUserProfileResourceResolver(resource_type);
 }
 
 ConfigComponentBase::ConfigComponentBase(ResourceResolver* resource_resolver)

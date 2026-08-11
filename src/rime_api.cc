@@ -45,6 +45,12 @@ extern void rime_require_module_levers();
 
 _RIME_SEQ_FOR_EACH(_RIME_PLUGIN_DECL, ~, RIME_EXTRA_MODULES)
 
+//extern void rime_require_module_lua();
+//extern void rime_require_module_octagram();
+//extern void rime_require_module_predict();
+//extern void rime_require_module_tx();
+//extern void rime_require_module_qjs();
+//extern void rime_require_module_candidate_action();
 // link to default modules explicitly when building static library.
 void rime_declare_module_dependencies() {
   rime_require_module_core();
@@ -52,6 +58,12 @@ void rime_declare_module_dependencies() {
   rime_require_module_gears();
   rime_require_module_levers();
   _RIME_SEQ_FOR_EACH(_RIME_PLUGIN_CALL, ~, RIME_EXTRA_MODULES)
+//  rime_require_module_lua();
+//  rime_require_module_octagram();
+//  rime_require_module_predict();
+//  rime_require_module_tx();
+//  rime_require_module_qjs();
+//  rime_require_module_candidate_action();
 }
 
 #undef _RIME_PLUGIN_DECL

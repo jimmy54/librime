@@ -1,5 +1,10 @@
 name: Windows build
 on:
+  workflow_dispatch:
+    inputs:
+      rime_plugins:
+        required: false
+        type: string
   workflow_call:
     inputs:
       repository:
@@ -16,22 +21,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        compiler: [msvc, clang]
+        # qjs 依赖 GNU 扩展，cl.exe 编不过；统一 clang-cl（MSVC ABI 兼容）
+        compiler: [clang-cl]
         arch: [x64]
         include:
-          - { compiler: msvc, cc: cl, cxx: cl }
-          - { compiler: clang, cc: clang, cxx: clang++ }
-          - { compiler: msvc, arch: x86, cross_arch: x64_x86 }
+          - { compiler: clang-cl, cc: clang-cl, cxx: clang-cl }
+          - { compiler: clang-cl, arch: x86, cross_arch: x64_x86, mflag: -m32, cc: clang-cl, cxx: clang-cl }
     env:
       boost_version: 1.89.0
       BOOST_ROOT: ${{ github.workspace }}\deps\boost-1.89.0
-      RIME_PLUGINS: ${{ inputs.rime_plugins }}
 
     steps:
       - name: Checkout last commit
         uses: actions/checkout@v5
         with:
-          repository: ${{ inputs.repository }}
+          repository: ${{ inputs.repository || github.repository }}
+          token: ${{ secrets.BIM_REPOS_TOKEN || github.token }}
           submodules: recursive
 
       - name: Create env.bat
@@ -41,13 +46,16 @@ jobs:
             set RIME_ROOT=%CD%
             set CXX=${{ matrix.cxx }}
             set CC=${{ matrix.cc }}
+            set CFLAGS=${{ matrix.mflag }}
+            set CXXFLAGS=${{ matrix.mflag }}
+            set RC=rc
+            set common_cmake_flags=-DCMAKE_RC_COMPILER=rc.exe
             set CMAKE_GENERATOR=Ninja
           "@
           Set-Content -Path $envfile -Value $envcontent
           cat $envfile
           
-      - name: Configure MSVC
-        if: ${{ matrix.compiler == 'msvc' }}
+      - name: Configure MSVC environment
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.cross_arch || matrix.arch }}
@@ -56,7 +64,6 @@ jobs:
         run: pip install ninja
 
       - name: Configure clang
-        if: ${{ matrix.compiler == 'clang' }}
         run: choco upgrade -y llvm
 
       - name: Configure build environment
@@ -83,9 +90,6 @@ jobs:
         if: steps.cache-deps.outputs.cache-hit != 'true'
         run: .\build.bat deps
 
-      - name: Install Rime plugins
-        run: .\action-install-plugins-windows.bat
-
       - name: Build and test
         run: .\build.bat test
 
@@ -104,77 +108,3 @@ jobs:
             rime-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}.7z
             rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.arch }}.7z
 
-  build-mingw:
-    runs-on: windows-latest
-    env:
-      RIME_PLUGINS: ${{ inputs.rime_plugins }}
-    defaults:
-      run:
-        shell: msys2 {0}
-
-    steps:
-      - name: Install dependencies with MSYS2
-        uses: msys2/setup-msys2@v2
-        with:
-          release: false
-          update: true
-          msystem: UCRT64
-          install: >-
-            git
-            base-devel
-            mingw-w64-ucrt-x86_64-boost
-            mingw-w64-ucrt-x86_64-glog
-            mingw-w64-ucrt-x86_64-gtest
-            mingw-w64-ucrt-x86_64-yaml-cpp
-            mingw-w64-ucrt-x86_64-leveldb
-            mingw-w64-ucrt-x86_64-marisa
-            mingw-w64-ucrt-x86_64-opencc
-          pacboy: >-
-            toolchain:p
-            cmake:p
-            ninja:p
-
-      - run: git config --global core.autocrlf input
-      - name: Checkout last commit
-        uses: actions/checkout@v5
-        with:
-          repository: ${{ inputs.repository }}
-            
-      - name: Configure build environment
-        run: |
-          echo git_ref_name="$(git describe --always)" >> $GITHUB_ENV
-
-      - name: Install Rime plugins
-        run: ./action-install-plugins-macos.sh
-
-      - name: Build with mingw-w64
-        run: |
-          cmake -B build -G Ninja \
-            -DCMAKE_INSTALL_PREFIX:PATH=`pwd`/dist \
-            -DCMAKE_BUILD_TYPE:STRING=Release \
-            -DENABLE_LOGGING:BOOL=ON \
-            -DBUILD_TEST:BOOL=ON \
-            -DBUILD_STATIC:BOOL=ON \
-            -DBUILD_SHARED_LIBS:BOOL=ON
-          cmake --build build
-          cmake --install build
-          # Temporarily disable test for mingw-w64
-          # due to msys2 glog package issue:
-          # https://github.com/msys2/MINGW-packages/issues/25344
-          # cd build && cp ./bin/librime.dll ./test
-          # ctest --output-on-failure
-
-      - name: Create distributable
-        run: |
-          tar -cjvf rime-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2 \
-          dist version-info.txt
-          tar -cjvf rime-deps-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2 \
-          --exclude '*/.placeholder' \
-          bin include lib share
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifact-${{ runner.os }}-mingw
-          path: |
-            rime-${{ env.git_ref_name }}-${{ runner.os }}-mingw.tar.bz2

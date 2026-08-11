@@ -82,7 +82,7 @@ bool DetectModifications::Run(Deployer* deployer) {
 bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
   const path& shared_data_path(deployer->shared_data_dir);
-  const path& user_data_path(deployer->user_data_dir);
+  const path& user_data_path(deployer->user_profile_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path;
     std::error_code ec;
@@ -181,22 +181,39 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
     LOG(ERROR) << "Error loading default config.";
     return false;
   }
-  auto schema_list = config->GetList("schema_list");
+  an<ConfigList> schema_list;
+  try {
+    schema_list = config->GetList("schema_list");
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "exception while reading schema_list: " << e.what();
+    return false;
+  }
   if (!schema_list) {
-    LOG(WARNING) << "schema list not defined.";
+    LOG(ERROR) << "schema_list node is missing or not a list in default.yaml.";
+    return false;
+  }
+  if (schema_list->size() == 0) {
+    LOG(WARNING) << "schema list is empty.";
     return false;
   }
 
   LOG(INFO) << "updating schemas.";
+
   int success = 0;
   int failure = 0;
   map<string, path> schemas;
   the<ResourceResolver> resolver(Service::instance().CreateResourceResolver(
       {"schema_source_file", "", ".schema.yaml"}));
+  if (!resolver) {
+    LOG(ERROR) << "failed to create resource resolver for schema source files.";
+    return false;
+  }
   auto build_schema = [&](const string& schema_id, bool as_dependency = false) {
     if (schemas.find(schema_id) != schemas.end())  // already built
       return;
+
     LOG(INFO) << "schema: " << schema_id;
+
     path schema_path;
     if (schemas.find(schema_id) == schemas.end()) {
       schema_path = resolver->ResolvePath(schema_id);
@@ -221,29 +238,72 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       ++failure;
   };
   auto schema_component = Config::Require("schema");
-  for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
-    auto item = As<ConfigMap>(*it);
-    if (!item)
-      continue;
-    auto schema_property = item->GetValue("schema");
-    if (!schema_property)
-      continue;
-    const string& schema_id = schema_property->str();
-    build_schema(schema_id);
-    the<Config> schema_config(schema_component->Create(schema_id));
-    if (!schema_config)
-      continue;
-    if (auto dependencies = schema_config->GetList("schema/dependencies")) {
+  if (!schema_component) {
+    LOG(ERROR) << "schema component is unavailable.";
+    return false;
+  }
+  try {
+    for (auto it = schema_list->begin(); it != schema_list->end(); ++it) {
+      if (!*it) {
+        LOG(WARNING) << "null schema item in schema_list, skipped.";
+        continue;
+      }
+
+      auto item = As<ConfigMap>(*it);
+      if (!item) {
+        LOG(WARNING) << "invalid schema item format (not a map), skipped.";
+        continue;
+      }
+
+      auto schema_property = item->GetValue("schema");
+      if (!schema_property) {
+        LOG(WARNING) << "schema item missing 'schema' property, skipped.";
+        continue;
+      }
+
+      const string& schema_id = schema_property->str();
+      if (schema_id.empty()) {
+        LOG(WARNING) << "empty schema_id, skipped.";
+        continue;
+      }
+
+      build_schema(schema_id);
+      the<Config> schema_config(schema_component->Create(schema_id));
+      if (!schema_config)
+        continue;
+      auto dependencies = schema_config->GetList("schema/dependencies");
+      if (!dependencies)
+        continue;
       for (auto d = dependencies->begin(); d != dependencies->end(); ++d) {
-        auto dependency = As<ConfigValue>(*d);
-        if (!dependency)
+        if (!*d) {
+          LOG(WARNING) << "null dependency item for schema: " << schema_id
+                       << ", skipped.";
           continue;
+        }
+
+        auto dependency = As<ConfigValue>(*d);
+        if (!dependency) {
+          LOG(WARNING) << "invalid dependency format for schema: " << schema_id
+                       << ", skipped.";
+          continue;
+        }
+
         const string& dependency_id = dependency->str();
+        if (dependency_id.empty()) {
+          LOG(WARNING) << "empty dependency_id for schema: " << schema_id
+                       << ", skipped.";
+          continue;
+        }
+
         bool as_dependency = true;
         build_schema(dependency_id, as_dependency);
       }
     }
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "exception while updating schemas: " << e.what();
+    return false;
   }
+
   LOG(INFO) << "finished updating schemas: " << success << " success, "
             << failure << " failure.";
 
@@ -453,7 +513,6 @@ bool ConfigFileUpdate::Run(Deployer* deployer) {
 
 bool PrebuildAllSchemas::Run(Deployer* deployer) {
   const path shared_data_path(deployer->shared_data_dir);
-  const path user_data_path(deployer->user_data_dir);
   if (!fs::exists(shared_data_path) || !fs::is_directory(shared_data_path))
     return false;
   bool success = true;
@@ -587,7 +646,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
 
 bool CleanupTrash::Run(Deployer* deployer) {
   LOG(INFO) << "clean up trash.";
-  const path user_data_path(deployer->user_data_dir);
+  const path user_data_path(deployer->user_profile_dir);
   if (!fs::exists(user_data_path))
     return false;
   path trash = user_data_path / "trash";
