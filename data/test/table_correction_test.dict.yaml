@@ -17,3 +17,8 @@ sort: by_weight
 
 # isolated code with no close neighbors in this tiny syllabary
 远码	qwer	600
+
+# Phrase typo case: uglg = 美国; ugl = 盖; h = 上; uglh recovers via g↔h
+美国	uglg	500
+盖	ugl	400
+上	h	300

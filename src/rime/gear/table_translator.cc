@@ -4,6 +4,7 @@
 //
 // 2011-07-10 GONG Chen <chen.sst@gmail.com>
 //
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <cmath>
@@ -31,6 +32,28 @@ static const char* kUnitySymbol = " \xe2\x98\xaf ";
 // log(0.01); aligned with syllabifier / script_translator correction penalty
 static const double kCorrectionCredibility = -4.605170185988091;
 static const size_t kMaxCorrections = 4;
+// Sentence path is stricter: only adjacent-key (distance <= 1) full-span fixes,
+// and only when exact prefix search found nothing (avoid competing with valid
+// exact splits such as uglh → 盖+上; Query still surfaces 美国 as corrected).
+static const size_t kSentenceCorrectionTolerance = 1;
+static const size_t kMaxSentenceCorrectionsPerPos = 2;
+
+using CorrectionItem = pair<SyllableId, corrector::Correction>;
+
+static vector<CorrectionItem> SortedCorrections(
+    const corrector::Corrections& corrections) {
+  vector<CorrectionItem> items(corrections.begin(), corrections.end());
+  std::sort(items.begin(), items.end(),
+            [](const CorrectionItem& a, const CorrectionItem& b) {
+              if (a.second.distance != b.second.distance)
+                return a.second.distance < b.second.distance;
+              // Prefer longer consumed spans when distance ties.
+              if (a.second.length != b.second.length)
+                return a.second.length > b.second.length;
+              return a.first < b.first;
+            });
+  return items;
+}
 
 // TableTranslation
 
@@ -342,7 +365,9 @@ an<Translation> TableTranslator::MakeCorrectionTranslation(
   }
 
   corrector::Corrections corrections;
-  corrector_->ToleranceSearch(prism, code, &corrections, 5);
+  // NearSearchCorrector mutates the key buffer temporarily; pass a copy.
+  string correction_key = code;
+  corrector_->ToleranceSearch(prism, correction_key, &corrections, 5);
   if (corrections.empty())
     return nullptr;
 
@@ -353,7 +378,9 @@ an<Translation> TableTranslator::MakeCorrectionTranslation(
   size_t correction_count = 0;
   hash_set<string> seen_text;
 
-  for (const auto& item : corrections) {
+  // Dense tables yield dozens of hits; prefer shorter edit distance first so
+  // true adjacent-key recoveries (e.g. uglh → uglg) are not starved.
+  for (const auto& item : SortedCorrections(corrections)) {
     if (correction_count >= kMaxCorrections)
       break;
     if (exact_match_spellings.count(item.first))
@@ -735,42 +762,122 @@ an<Translation> TableTranslator::MakeSentence(const string& input,
     if (dict_ && dict_->loaded()) {
       vector<Prism::Match> matches;
       dict_->prism()->CommonPrefixSearch(input.substr(start_pos), &matches);
-      if (matches.empty())
-        continue;
-      for (const auto& m : boost::adaptors::reverse(matches)) {
-        if (m.length == 0)
-          continue;
-        size_t consumed_length =
-            consume_trailing_delimiters(m.length, active_input, delimiters_);
-        size_t end_pos = start_pos + consumed_length;
-        auto& homographs = same_start_pos[end_pos];
-        if (homographs.size() >= max_homographs_)
-          continue;
-        DictEntryIterator iter;
-        dict_->LookupWords(&iter, active_input.substr(0, m.length), false, 0,
-                           &blacklist());
-        if (filter_by_charset) {
-          iter.AddFilter(CharsetFilter::FilterDictEntry);
-        }
-        if (!iter.exhausted()) {
-          vertices.insert(end_pos);
-          if (start_pos == 0 && max_homographs_ - homographs.size() > 1) {
-            DictEntryIterator iter_copy = iter;
-            collect_entries(homographs, iter_copy, max_homographs_);
-          } else {
-            collect_entries(homographs, iter, max_homographs_);
+      set<SyllableId> exact_match_spellings;
+      for (const auto& m : matches) {
+        exact_match_spellings.insert(m.value);
+      }
+      if (!matches.empty()) {
+        for (const auto& m : boost::adaptors::reverse(matches)) {
+          if (m.length == 0)
+            continue;
+          size_t consumed_length =
+              consume_trailing_delimiters(m.length, active_input, delimiters_);
+          size_t end_pos = start_pos + consumed_length;
+          auto& homographs = same_start_pos[end_pos];
+          if (homographs.size() >= max_homographs_)
+            continue;
+          DictEntryIterator iter;
+          dict_->LookupWords(&iter, active_input.substr(0, m.length), false, 0,
+                             &blacklist());
+          if (filter_by_charset) {
+            iter.AddFilter(CharsetFilter::FilterDictEntry);
           }
-          if (include_prefix_phrases && start_pos == 0) {
-            // also provide words for manual composition
-            // iter must not be consumed
-            collector[consumed_length] = std::move(iter);
-            DLOG(INFO) << "table[" << consumed_length
-                       << "]: " << collector[consumed_length].entry_count();
+          if (!iter.exhausted()) {
+            vertices.insert(end_pos);
+            if (start_pos == 0 && max_homographs_ - homographs.size() > 1) {
+              DictEntryIterator iter_copy = iter;
+              collect_entries(homographs, iter_copy, max_homographs_);
+            } else {
+              collect_entries(homographs, iter, max_homographs_);
+            }
+            if (include_prefix_phrases && start_pos == 0) {
+              // also provide words for manual composition
+              // iter must not be consumed
+              collector[consumed_length] = std::move(iter);
+              DLOG(INFO) << "table[" << consumed_length
+                         << "]: " << collector[consumed_length].entry_count();
+            }
+          }
+        }
+      }
+      // Cautious correction edges for sentence building (fallback only):
+      // - only when exact prefix search found no matches (dead-end input)
+      // - only from segment start (avoid mid-graph explosion / instability)
+      // - only adjacent-key distance, full remaining span
+      // - capped and strongly down-weighted
+      // When exact prefixes exist (e.g. uglh → ugl|h), leave the graph alone;
+      // MakeCorrectionTranslation still appends corrected candidates in Query.
+      if (enable_correction_ && corrector_ && start_pos == 0 &&
+          !active_input.empty() && matches.empty() &&
+          same_start_pos.empty()) {
+        corrector::Corrections corrections;
+        // NearSearchCorrector mutates the key buffer temporarily; pass a copy.
+        string correction_input = active_input;
+        corrector_->ToleranceSearch(*dict_->prism(), correction_input,
+                                    &corrections, kSentenceCorrectionTolerance);
+        size_t added = 0;
+        for (const auto& item : SortedCorrections(corrections)) {
+          if (added >= kMaxSentenceCorrectionsPerPos)
+            break;
+          if (exact_match_spellings.count(item.first))
+            continue;
+          if (item.second.distance == 0 ||
+              item.second.distance > kSentenceCorrectionTolerance)
+            continue;
+          if (item.second.length != active_input.length())
+            continue;
+
+          for (auto accessor = dict_->prism()->QuerySpelling(item.first);
+               !accessor.exhausted(); accessor.Next()) {
+            if (added >= kMaxSentenceCorrectionsPerPos)
+              break;
+            auto props = accessor.properties();
+            if (props.type != kNormalSpelling || props.is_correction)
+              continue;
+            string corrected = dict_->primary_table()->GetSyllableById(
+                accessor.syllable_id());
+            if (corrected.empty() || corrected == active_input)
+              continue;
+
+            size_t consumed_length = consume_trailing_delimiters(
+                item.second.length, active_input, delimiters_);
+            size_t end_pos = start_pos + consumed_length;
+            auto& homographs = same_start_pos[end_pos];
+            if (homographs.size() >= static_cast<size_t>(max_homographs_))
+              continue;
+
+            DictEntryIterator iter;
+            if (!dict_->LookupWords(&iter, corrected, false, 0,
+                                    &blacklist()) ||
+                iter.exhausted()) {
+              continue;
+            }
+            if (filter_by_charset) {
+              iter.AddFilter(CharsetFilter::FilterDictEntry);
+            }
+            size_t before = homographs.size();
+            while (!iter.exhausted() &&
+                   homographs.size() < static_cast<size_t>(max_homographs_)) {
+              auto entry = iter.Peek();
+              if (entry) {
+                auto adjusted = New<DictEntry>(*entry);
+                adjusted->weight += kCorrectionCredibility;
+                homographs.push_back(std::move(adjusted));
+              }
+              if (!iter.Next())
+                break;
+            }
+            if (homographs.size() > before) {
+              vertices.insert(end_pos);
+              ++added;
+            }
           }
         }
       }
     }
   }
+  if (!poet_)
+    return nullptr;
   if (auto sentence =
           poet_->MakeSentence(graph, input.length(), GetPrecedingText(start))) {
     auto result = Cached<SentenceTranslation>(
