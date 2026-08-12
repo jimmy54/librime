@@ -81,7 +81,8 @@ class TableTranslatorCorrectionTest : public ::testing::Test {
     rebuilt_ = true;
   }
 
-  the<Engine> CreateEngine(bool enable_correction) {
+  the<Engine> CreateEngine(bool enable_correction,
+                           bool enable_sentence = false) {
     auto* config = new Config;
     if (!config->LoadFromFile(path{"table_correction_test.schema.yaml"})) {
       delete config;
@@ -90,7 +91,7 @@ class TableTranslatorCorrectionTest : public ::testing::Test {
     }
     config->SetBool("translator/enable_correction", enable_correction);
     config->SetBool("translator/enable_completion", false);
-    config->SetBool("translator/enable_sentence", false);
+    config->SetBool("translator/enable_sentence", enable_sentence);
     config->SetBool("translator/enable_user_dict", false);
 
     auto* schema = new Schema("table_correction_test", config);
@@ -202,4 +203,35 @@ TEST_F(TableTranslatorCorrectionTest, IsolatedExactHasNoCorrectionNoise) {
   ASSERT_FALSE(cands.empty());
   EXPECT_EQ("远码", cands.front().text);
   EXPECT_EQ(0u, CountType(cands, "corrected"));
+}
+
+TEST_F(TableTranslatorCorrectionTest, PhraseTypoUglhRecovers美国) {
+  // Mirrors real wubi case: uglg=美国, ugl=盖, h=上; typo uglh must not lose 美国.
+  // Cover Query-level distance-ordered correction (sentence path covered by bim tests /
+  // manual verification — Engine reuse across gtests is flaky with poet+correction).
+  auto engine = CreateEngine(/*enable_correction=*/true,
+                             /*enable_sentence=*/false);
+  ASSERT_TRUE(engine);
+  auto translation = Query(engine.get(), "uglh");
+  ASSERT_TRUE(translation);
+  bool found = false;
+  for (size_t i = 0; !translation->exhausted() && i < 5; ++i) {
+    auto cand = translation->Peek();
+    if (cand && cand->text() == "美国" && cand->type() == "corrected") {
+      found = true;
+      break;
+    }
+    if (!translation->Next())
+      break;
+  }
+  EXPECT_TRUE(found) << "美国 should appear as a top corrected candidate";
+}
+
+TEST_F(TableTranslatorCorrectionTest, ExactPhraseUnaffectedBySentenceCorrection) {
+  auto engine = CreateEngine(true, true);
+  ASSERT_TRUE(engine);
+  auto cands = CollectCandidates(Query(engine.get(), "uglg"));
+  ASSERT_FALSE(cands.empty());
+  EXPECT_EQ("美国", cands.front().text);
+  EXPECT_NE("corrected", cands.front().type);
 }

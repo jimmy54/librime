@@ -86,8 +86,19 @@ vector<CorrectionHit> LookupCorrections(Dictionary* dict,
   corrector::Corrections corrections;
   corrector->ToleranceSearch(prism, code, &corrections, 5);
 
+  vector<pair<SyllableId, corrector::Correction>> items(corrections.begin(),
+                                                        corrections.end());
+  std::sort(items.begin(), items.end(),
+            [](const auto& a, const auto& b) {
+              if (a.second.distance != b.second.distance)
+                return a.second.distance < b.second.distance;
+              if (a.second.length != b.second.length)
+                return a.second.length > b.second.length;
+              return a.first < b.first;
+            });
+
   hash_set<string> seen;
-  for (const auto& item : corrections) {
+  for (const auto& item : items) {
     if (hits.size() >= max_corrections)
       break;
     if (exact.count(item.first))
@@ -181,6 +192,21 @@ TEST_F(BimWubiCorrectionTest, TypoSaaaCorrectsTo工) {
   }
   EXPECT_TRUE(found) << "expected correction saaa → aaaa/工";
 }
+
+TEST_F(BimWubiCorrectionTest, TypoUglhCorrectsTo美国WithinLimit) {
+  // Regression: uglh used to be starved by unordered correction hits, while
+  // MakeSentence split into ugl|h (盖+上). Distance-ordered top-N must keep 美国.
+  auto hits = LookupCorrections(dict_.get(), corrector_.get(), "uglh", 4);
+  ASSERT_FALSE(hits.empty());
+  bool found = std::any_of(hits.begin(), hits.end(), [](const CorrectionHit& h) {
+    return h.corrected_code == "uglg" && h.text == "美国";
+  });
+  EXPECT_TRUE(found) << "expected uglh → uglg/美国 within top-4 corrections";
+  if (!hits.empty()) {
+    EXPECT_LE(hits.front().distance, 1u);
+  }
+}
+
 
 TEST_F(BimWubiCorrectionTest, TypoAasaCorrectsTo工) {
   auto hits = LookupCorrections(dict_.get(), corrector_.get(), "aasa");
