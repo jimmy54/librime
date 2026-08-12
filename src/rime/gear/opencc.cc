@@ -18,29 +18,79 @@ Opencc::Opencc(const path& config_path)
     : initialized_(false), config_path_(config_path) {}
 
 void Opencc::Initialize() {
-  if (initialized_)
+  if (initialized_.load(std::memory_order_acquire))
     return;
-  initialized_ = true;
+
+  std::lock_guard<std::mutex> lock(init_mutex_);
+
+  // 再次检查，防止重复初始化
+  if (initialized_.load(std::memory_order_acquire))
+    return;
+
   opencc::Config config;
   try {
     // opencc accepts file path encoded in UTF-8.
     converter_ = config.NewFromFile(config_path_.u8string());
 
-    const list<opencc::ConversionPtr> conversions =
-        converter_->GetConversionChain()->GetConversions();
+    if (!converter_) {
+      LOG(ERROR) << "opencc converter is null after initialization";
+      converter_.reset();
+      dict_.reset();
+      return;
+    }
+
+    auto chain = converter_->GetConversionChain();
+    if (!chain) {
+      LOG(ERROR) << "opencc conversion chain is null after initialization";
+      converter_.reset();
+      dict_.reset();
+      return;
+    }
+
+    const list<opencc::ConversionPtr> conversions = chain->GetConversions();
+
+    if (conversions.empty()) {
+      LOG(ERROR) << "opencc conversions chain is empty";
+      converter_.reset();
+      dict_.reset();
+      return;
+    }
+
     dict_ = conversions.front()->GetDict();
+
+    initialized_.store(true, std::memory_order_release);
+
+  } catch (const std::exception& e) {
+    LOG(ERROR) << "opencc initialization failed: " << e.what()
+               << ", path: " << config_path_;
+    converter_.reset();
+    dict_.reset();
   } catch (...) {
     LOG(ERROR) << "opencc config not found: " << config_path_;
+    converter_.reset();
+    dict_.reset();
   }
 }
 
 bool Opencc::ConvertWord(const string& text, vector<string>* forms) {
   Initialize();
-  if (converter_ == nullptr) {
+
+  if (!initialized_.load(std::memory_order_acquire) || converter_ == nullptr) {
+    LOG(WARNING) << "opencc not properly initialized, skipping conversion";
     return false;
   }
-  const list<opencc::ConversionPtr> conversions =
-      converter_->GetConversionChain()->GetConversions();
+
+  auto chain = converter_->GetConversionChain();
+  if (!chain) {
+    LOG(ERROR) << "opencc conversion chain is null";
+    return false;
+  }
+
+  const list<opencc::ConversionPtr> conversions = chain->GetConversions();
+  if (conversions.empty()) {
+    LOG(WARNING) << "opencc conversions list is empty";
+    return false;
+  }
   vector<string> original_words{text};
   bool matched = false;
   for (auto conversion : conversions) {
@@ -101,10 +151,24 @@ bool Opencc::ConvertWord(const string& text, vector<string>* forms) {
 
 bool Opencc::RandomConvertText(const string& text, string* simplified) {
   Initialize();
-  if (dict_ == nullptr)
+
+  if (!initialized_.load(std::memory_order_acquire) || converter_ == nullptr ||
+      dict_ == nullptr) {
+    LOG(WARNING) << "opencc not properly initialized, skipping conversion";
     return false;
-  const list<opencc::ConversionPtr> conversions =
-      converter_->GetConversionChain()->GetConversions();
+  }
+
+  auto chain = converter_->GetConversionChain();
+  if (!chain) {
+    LOG(ERROR) << "opencc conversion chain is null";
+    return false;
+  }
+
+  const list<opencc::ConversionPtr> conversions = chain->GetConversions();
+  if (conversions.empty()) {
+    LOG(WARNING) << "opencc conversions list is empty";
+    return false;
+  }
   const char* phrase = text.c_str();
   for (auto conversion : conversions) {
     opencc::DictPtr dict = conversion->GetDict();
@@ -121,8 +185,15 @@ bool Opencc::RandomConvertText(const string& text, string* simplified) {
         buffer << opencc::UTF8Util::FromSubstr(pstr, matched_length);
       } else {
         matched_length = matched.Get()->KeyLength();
-        size_t i = rand() % (matched.Get()->NumValues());
-        buffer << matched.Get()->Values().at(i);
+        size_t num_values = matched.Get()->NumValues();
+        if (num_values == 0) {
+          LOG(WARNING) << "matched entry has no values";
+          matched_length = opencc::UTF8Util::NextCharLength(pstr);
+          buffer << opencc::UTF8Util::FromSubstr(pstr, matched_length);
+        } else {
+          size_t i = rand() % num_values;
+          buffer << matched.Get()->Values().at(i);
+        }
       }
       pstr += matched_length;
     }
@@ -134,8 +205,11 @@ bool Opencc::RandomConvertText(const string& text, string* simplified) {
 
 bool Opencc::ConvertText(const string& text, string* simplified) {
   Initialize();
-  if (converter_ == nullptr)
+
+  if (!initialized_.load(std::memory_order_acquire) || converter_ == nullptr) {
+    LOG(WARNING) << "opencc not properly initialized, skipping conversion";
     return false;
+  }
   *simplified = converter_->Convert(text);
   return *simplified != text;
 }
