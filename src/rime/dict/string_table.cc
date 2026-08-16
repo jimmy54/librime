@@ -6,6 +6,7 @@
 //
 
 #include <sstream>
+#include <cstdint>
 #include <rime/common.h>
 #include <rime/dict/string_table.h>
 
@@ -59,7 +60,14 @@ string StringTable::GetString(StringId string_id) {
     LOG(ERROR) << "invalid id for string table: " << string_id;
     return string();
   }
-  return string(agent.key().ptr(), agent.key().length());
+  const char* ptr = agent.key().ptr();
+  const size_t len = agent.key().length();
+  // 0x17 这类低地址是 mmap/id 损坏时 reverse_lookup 的典型产物，直接 string(ptr,len) 会 SIGSEGV。
+  if (!ptr || reinterpret_cast<uintptr_t>(ptr) < 4096) {
+    LOG(ERROR) << "string table reverse_lookup returned invalid ptr, id=" << string_id;
+    return string();
+  }
+  return string(ptr, len);
 }
 
 size_t StringTable::NumKeys() const {
