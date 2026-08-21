@@ -1,5 +1,9 @@
 # Rime default settings
 # encoding: utf-8
+#
+# Drop-in dictionaries (same directory as this file):
+#   extra_dicts/*.dict.yaml  - merged into each schema's main dictionary
+#   packs/*.dict.yaml        - compiled as packs (encoded entries only)
 
 config_version: "0.1.sample"
 
