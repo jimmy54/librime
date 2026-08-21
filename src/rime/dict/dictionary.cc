@@ -8,7 +8,6 @@
 #include <rime/algo/syllabifier.h>
 #include <rime/common.h>
 #include <rime/dict/dictionary.h>
-#include <rime/dict/user_dict_drop_in.h>
 #include <rime/resource.h>
 #include <rime/schema.h>
 #include <rime/service.h>
@@ -448,8 +447,6 @@ Dictionary* DictionaryComponent::Create(const Ticket& ticket) {
       }
     }
   }
-  AppendAutoPacks(&packs, dict_name,
-                  Service::instance().deployer().user_data_dir);
   return Create(std::move(dict_name), std::move(prism_name), std::move(packs));
 }
 

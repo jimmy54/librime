@@ -185,20 +185,10 @@ bool DictCompiler::Compile(const path& schema_file) {
   }
   for (int table_index = 1; table_index < tables_.size(); ++table_index) {
     const auto& pack_name = packs_[table_index - 1];
-    const bool auto_pack = IsAutoPackTableId(dict_name_, pack_name);
-    if (auto_pack && !enable_drop_in_) {
-      continue;
-    }
     auto pack_table = tables_[table_index];
     EntryCollector collector(std::move(syllabary));
     DictSettings settings;
-    path dict_file;
-    if (auto_pack) {
-      dict_file = user_data_dir / kPacksDirName /
-                  (AutoPackStem(dict_name_, pack_name) + ".dict.yaml");
-    } else {
-      dict_file = source_resolver_->ResolvePath(pack_name + ".dict.yaml");
-    }
+    auto dict_file = source_resolver_->ResolvePath(pack_name + ".dict.yaml");
     if (!std::filesystem::exists(dict_file)) {
       if (pack_table->Exists())
         LOG(INFO) << "pack source file '" << dict_file
@@ -214,10 +204,8 @@ bool DictCompiler::Compile(const path& schema_file) {
       continue;
     }
     vector<path> dict_files;
-    if (auto_pack) {
-      dict_files.push_back(dict_file);
-    } else if (!get_dict_files_from_settings(&dict_files, settings,
-                                             source_resolver_.get())) {
+    if (!get_dict_files_from_settings(&dict_files, settings,
+                                      source_resolver_.get())) {
       continue;
     }
     uint32_t pack_file_checksum =
