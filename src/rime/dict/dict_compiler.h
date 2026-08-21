@@ -36,6 +36,8 @@ class DictCompiler {
 
   RIME_DLL bool Compile(const path& schema_file);
   void set_options(int options) { options_ = options; }
+  void set_enable_drop_in(bool enable) { enable_drop_in_ = enable; }
+  bool enable_drop_in() const { return enable_drop_in_; }
 
  private:
   bool BuildTable(int table_index,
@@ -57,6 +59,7 @@ class DictCompiler {
   an<EditDistanceCorrector> correction_;
   vector<of<Table>> tables_;
   int options_ = 0;
+  bool enable_drop_in_ = true;
   the<ResourceResolver> source_resolver_;
   the<ResourceResolver> target_resolver_;
 };

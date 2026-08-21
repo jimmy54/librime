@@ -215,6 +215,9 @@ bool WorkspaceUpdate::Run(Deployer* deployer) {
       return;
     }
     the<DeploymentTask> t(new SchemaUpdate(schema_path));
+    if (as_dependency) {
+      static_cast<SchemaUpdate*>(t.get())->set_enable_drop_in(false);
+    }
     if (t->Run(deployer))
       ++success;
     else
@@ -365,6 +368,7 @@ bool SchemaUpdate::Run(Deployer* deployer) {
     return false;
   }
   DictCompiler dict_compiler(dict.get());
+  dict_compiler.set_enable_drop_in(enable_drop_in_);
   if (verbose_) {
     dict_compiler.set_options(DictCompiler::kRebuild | DictCompiler::kDump);
   }
