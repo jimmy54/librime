@@ -63,7 +63,8 @@ Simplifier::Simplifier(const Ticket& ticket, an<Opencc> opencc)
 
 class SimplifiedTranslation : public PrefetchTranslation {
  public:
-  SimplifiedTranslation(an<Translation> translation, const Simplifier& simplifier)
+  SimplifiedTranslation(an<Translation> translation,
+                        const Simplifier& simplifier)
       : PrefetchTranslation(translation), simplifier_(simplifier) {}
 
  protected:

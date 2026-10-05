@@ -254,13 +254,13 @@ TEST_F(SimplifierConvertTest, AllConversionsFail_ReturnsFalse) {
   EXPECT_TRUE(result.empty());
 }
 
-
 class SimplifierLifetimeEngine : public Engine {
  public:
   SimplifierLifetimeEngine() = default;
 };
 
-TEST(SimplifierLifetimeTest, LazyTranslationOwnsConverterAfterFilterDestruction) {
+TEST(SimplifierLifetimeTest,
+     LazyTranslationOwnsConverterAfterFilterDestruction) {
   SimplifierLifetimeEngine engine;
   engine.context()->set_option("simplification", true);
   auto converter = New<FakeOpencc>();
@@ -268,7 +268,8 @@ TEST(SimplifierLifetimeTest, LazyTranslationOwnsConverterAfterFilterDestruction)
   weak<Opencc> lifetime = converter;
   Ticket ticket(&engine, "filter", "simplifier");
   auto filter = std::make_unique<Simplifier>(ticket, converter);
-  auto source = New<UniqueTranslation>(New<SimpleCandidate>("word", 0, 1, "裡"));
+  auto source =
+      New<UniqueTranslation>(New<SimpleCandidate>("word", 0, 1, "裡"));
   auto translation = filter->Apply(source, nullptr);
   filter.reset();
   converter.reset();
