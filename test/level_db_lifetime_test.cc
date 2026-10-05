@@ -6,14 +6,17 @@ using namespace rime;
 class LevelDbLifetimeTest : public ::testing::Test {
  protected:
   void SetUp() override {
-    db_ = std::make_unique<LevelDb>(path{"level_db_lifetime_test.db"}, "lifetime");
-    if (db_->Exists()) db_->Remove();
+    db_ = std::make_unique<LevelDb>(path{"level_db_lifetime_test.db"},
+                                    "lifetime");
+    if (db_->Exists())
+      db_->Remove();
     ASSERT_TRUE(db_->Open());
     ASSERT_TRUE(db_->Update("key", "value"));
   }
   void TearDown() override {
     if (db_) {
-      if (db_->loaded()) db_->Close();
+      if (db_->loaded())
+        db_->Close();
       db_->Remove();
     }
   }

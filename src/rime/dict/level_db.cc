@@ -74,9 +74,9 @@ struct LevelDbWrapper {
 
   an<LevelDbCursor> CreateCursor() {
     cursors.erase(std::remove_if(cursors.begin(), cursors.end(),
-                                [](const weak<LevelDbCursor>& cursor) {
-                                  return cursor.expired();
-                                }),
+                                 [](const weak<LevelDbCursor>& cursor) {
+                                   return cursor.expired();
+                                 }),
                   cursors.end());
     auto cursor = New<LevelDbCursor>(ptr);
     cursors.push_back(cursor);
