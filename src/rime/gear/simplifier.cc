@@ -63,19 +63,21 @@ Simplifier::Simplifier(const Ticket& ticket, an<Opencc> opencc)
 
 class SimplifiedTranslation : public PrefetchTranslation {
  public:
-  SimplifiedTranslation(an<Translation> translation, Simplifier* simplifier)
+  SimplifiedTranslation(an<Translation> translation,
+                        const Simplifier& simplifier)
       : PrefetchTranslation(translation), simplifier_(simplifier) {}
 
  protected:
   virtual bool Replenish();
 
-  Simplifier* simplifier_;
+  // 懒转换可能晚于原 Filter 的销毁；保留转换器和配置快照，不借用裸指针。
+  Simplifier simplifier_;
 };
 
 bool SimplifiedTranslation::Replenish() {
   auto next = translation_->Peek();
   translation_->Next();
-  if (next && !simplifier_->Convert(next, &cache_)) {
+  if (next && !simplifier_.Convert(next, &cache_)) {
     cache_.push_back(next);
   }
   return !cache_.empty();
@@ -89,7 +91,7 @@ an<Translation> Simplifier::Apply(an<Translation> translation,
   if (!opencc_) {
     return translation;
   }
-  return New<SimplifiedTranslation>(translation, this);
+  return New<SimplifiedTranslation>(translation, *this);
 }
 
 void Simplifier::PushBack(const an<Candidate>& original,
