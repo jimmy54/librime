@@ -19,7 +19,7 @@ class LevelDb;
 class LevelDbAccessor : public DbAccessor {
  public:
   LevelDbAccessor();
-  LevelDbAccessor(LevelDbCursor* cursor, const string& prefix);
+  LevelDbAccessor(an<LevelDbCursor> cursor, const string& prefix);
   virtual ~LevelDbAccessor();
 
   bool Reset() override;
@@ -28,7 +28,7 @@ class LevelDbAccessor : public DbAccessor {
   bool exhausted() override;
 
  private:
-  the<LevelDbCursor> cursor_;
+  an<LevelDbCursor> cursor_;
   bool is_metadata_query_ = false;
 };
 

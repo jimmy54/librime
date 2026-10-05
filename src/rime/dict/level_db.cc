@@ -5,6 +5,7 @@
 // 2014-12-04 Chen Gong <chen.sst@gmail.com>
 //
 
+#include <algorithm>
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 #include <rime/common.h>
@@ -24,6 +25,8 @@ struct LevelDbCursor {
     options.fill_cache = false;
     iterator = db->NewIterator(options);
   }
+
+  ~LevelDbCursor() { Release(); }
 
   bool IsValid() const { return iterator && iterator->Valid(); }
 
@@ -50,6 +53,7 @@ struct LevelDbCursor {
 struct LevelDbWrapper {
   leveldb::DB* ptr = nullptr;
   leveldb::WriteBatch batch;
+  vector<weak<LevelDbCursor>> cursors;
 
   leveldb::Status Open(const path& file_path, bool readonly) {
     leveldb::Options options;
@@ -58,11 +62,26 @@ struct LevelDbWrapper {
   }
 
   void Release() {
+    // LevelDB 要求 Iterator 先于 DB 析构；Lua 可以在 close 后仍持有 Accessor。
+    for (auto& weak_cursor : cursors) {
+      if (auto cursor = weak_cursor.lock())
+        cursor->Release();
+    }
+    cursors.clear();
     delete ptr;
     ptr = nullptr;
   }
 
-  LevelDbCursor* CreateCursor() { return new LevelDbCursor(ptr); }
+  an<LevelDbCursor> CreateCursor() {
+    cursors.erase(std::remove_if(cursors.begin(), cursors.end(),
+                                [](const weak<LevelDbCursor>& cursor) {
+                                  return cursor.expired();
+                                }),
+                  cursors.end());
+    auto cursor = New<LevelDbCursor>(ptr);
+    cursors.push_back(cursor);
+    return cursor;
+  }
 
   bool Fetch(const string& key, string* value) {
     auto status = ptr->Get(leveldb::ReadOptions(), key, value);
@@ -99,27 +118,25 @@ struct LevelDbWrapper {
 
 LevelDbAccessor::LevelDbAccessor() {}
 
-LevelDbAccessor::LevelDbAccessor(LevelDbCursor* cursor, const string& prefix)
+LevelDbAccessor::LevelDbAccessor(an<LevelDbCursor> cursor, const string& prefix)
     : DbAccessor(prefix),
       cursor_(cursor),
       is_metadata_query_(prefix == kMetaCharacter) {
   Reset();
 }
 
-LevelDbAccessor::~LevelDbAccessor() {
-  cursor_->Release();
-}
+LevelDbAccessor::~LevelDbAccessor() = default;
 
 bool LevelDbAccessor::Reset() {
-  return cursor_->Jump(prefix_);
+  return cursor_ && cursor_->Jump(prefix_);
 }
 
 bool LevelDbAccessor::Jump(const string& key) {
-  return cursor_->Jump(key);
+  return cursor_ && cursor_->Jump(key);
 }
 
 bool LevelDbAccessor::GetNextRecord(string* key, string* value) {
-  if (!cursor_->IsValid() || !key || !value)
+  if (!cursor_ || !cursor_->IsValid() || !key || !value)
     return false;
   *key = cursor_->GetKey();
   if (!MatchesPrefix(*key)) {
@@ -134,7 +151,7 @@ bool LevelDbAccessor::GetNextRecord(string* key, string* value) {
 }
 
 bool LevelDbAccessor::exhausted() {
-  return !cursor_->IsValid() || !MatchesPrefix(cursor_->GetKey());
+  return !cursor_ || !cursor_->IsValid() || !MatchesPrefix(cursor_->GetKey());
 }
 
 // LevelDb members
