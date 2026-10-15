@@ -5,6 +5,10 @@
 // 2011-07-03 GONG Chen <chen.sst@gmail.com>
 //
 #include <gtest/gtest.h>
+#include <cstddef>
+#include <fstream>
+#include <iterator>
+#include <limits>
 #include <rime/algo/syllabifier.h>
 #include <rime/dict/table.h>
 
@@ -202,4 +206,68 @@ TEST_F(RimeTableTest, QueryWithSyllableGraph) {
   EXPECT_TRUE(result[4].front().Next());
   EXPECT_STREQ("lia", Text(result[4].front()).c_str());
   EXPECT_FALSE(result[4].front().Next());
+}
+
+// These files are synthetic; no user dictionary or captured event data is used.
+TEST_F(RimeTableTest, RejectInvalidStringTableRanges) {
+  std::ifstream input("table_test.bin", std::ios::binary);
+  const std::string original((std::istreambuf_iterator<char>(input)),
+                             std::istreambuf_iterator<char>());
+  ASSERT_GE(original.size(), sizeof(rime::table::Metadata));
+  const size_t offset_field = offsetof(rime::table::Metadata, string_table);
+  const size_t size_field = offsetof(rime::table::Metadata, string_table_size);
+  int32_t valid_offset;
+  uint32_t valid_size;
+  std::memcpy(&valid_offset, original.data() + offset_field, sizeof(valid_offset));
+  std::memcpy(&valid_size, original.data() + size_field, sizeof(valid_size));
+  const std::pair<int32_t, uint32_t> cases[] = {
+      {0, valid_size},
+      {std::numeric_limits<int32_t>::min(), valid_size},
+      {std::numeric_limits<int32_t>::max(), valid_size},
+      {valid_offset, 0},
+      {valid_offset, std::numeric_limits<uint32_t>::max()},
+      {static_cast<int32_t>(original.size() - offset_field), valid_size},
+  };
+  for (const auto& item : cases) {
+    std::string data = original;
+    std::memcpy(&data[offset_field], &item.first, sizeof(item.first));
+    std::memcpy(&data[size_field], &item.second, sizeof(item.second));
+    const char* filename = "table_invalid_range_test.bin";
+    {
+      std::ofstream output(filename, std::ios::binary | std::ios::trunc);
+      output.write(data.data(), data.size());
+      ASSERT_TRUE(output.good());
+    }
+    rime::Table damaged(rime::path{filename});
+    EXPECT_FALSE(damaged.Load());
+    EXPECT_FALSE(damaged.IsOpen());
+    damaged.Remove();
+  }
+}
+
+TEST_F(RimeTableTest, RejectCorruptStringTableAndShortMetadata) {
+  std::ifstream input("table_test.bin", std::ios::binary);
+  const std::string original((std::istreambuf_iterator<char>(input)),
+                             std::istreambuf_iterator<char>());
+  ASSERT_GE(original.size(), sizeof(rime::table::Metadata));
+  const size_t offset_field = offsetof(rime::table::Metadata, string_table);
+  int32_t relative_offset;
+  std::memcpy(&relative_offset, original.data() + offset_field, sizeof(relative_offset));
+  const int64_t image_offset = static_cast<int64_t>(offset_field) + relative_offset;
+  ASSERT_GE(image_offset, 0);
+  ASSERT_LT(static_cast<size_t>(image_offset), original.size());
+  std::string corrupt = original;
+  corrupt[image_offset] = 0;  // Invalid marisa magic, with valid offset and size.
+  for (const auto& data : {original.substr(0, sizeof(rime::table::Metadata) - 1), corrupt}) {
+    const char* filename = "table_invalid_format_test.bin";
+    {
+      std::ofstream output(filename, std::ios::binary | std::ios::trunc);
+      output.write(data.data(), data.size());
+      ASSERT_TRUE(output.good());
+    }
+    rime::Table damaged(rime::path{filename});
+    EXPECT_NO_THROW(EXPECT_FALSE(damaged.Load()));
+    EXPECT_FALSE(damaged.IsOpen());
+    damaged.Remove();
+  }
 }

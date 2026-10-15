@@ -5,6 +5,8 @@
 // 2011-07-02 GONG Chen <chen.sst@gmail.com>
 //
 #include <cfloat>
+#include <cstddef>
+#include <exception>
 #include <cstring>
 #include <algorithm>
 #include <queue>
@@ -257,8 +259,25 @@ bool Table::OnBuildFinish() {
 }
 
 bool Table::OnLoad() {
-  string_table_.reset(new StringTable(metadata_->string_table.get(),
-                                      metadata_->string_table_size));
+  string_table_.reset();
+  // Validate the serialized offset before forming a pointer outside the mapping.
+  int32_t relative_offset;
+  std::memcpy(&relative_offset, &metadata_->string_table, sizeof(relative_offset));
+  const int64_t offset = static_cast<int64_t>(offsetof(table::Metadata, string_table)) +
+                         relative_offset;
+  const size_t size = metadata_->string_table_size;
+  if (!relative_offset || offset < static_cast<int64_t>(sizeof(table::Metadata)) ||
+      static_cast<uint64_t>(offset) > file_size() || !size ||
+      size > file_size() - static_cast<size_t>(offset)) {
+    LOG(ERROR) << "invalid string table range in '" << file_path() << "'.";
+    return false;
+  }
+  try {
+    string_table_.reset(new StringTable(address() + offset, size));
+  } catch (const std::exception& ex) {
+    LOG(ERROR) << "invalid string table in '" << file_path() << "': " << ex.what();
+    return false;
+  }
   return true;
 }
 
@@ -277,7 +296,8 @@ bool Table::Load() {
     return false;
   }
 
-  metadata_ = Find<table::Metadata>(0);
+  metadata_ = file_size() >= sizeof(table::Metadata)
+                  ? Find<table::Metadata>(0) : nullptr;
   if (!metadata_) {
     LOG(ERROR) << "metadata not found.";
     Close();
@@ -309,7 +329,11 @@ bool Table::Load() {
     return false;
   }
 
-  return OnLoad();
+  if (!OnLoad()) {
+    Close();
+    return false;
+  }
+  return true;
 }
 
 bool Table::Save() {
