@@ -72,15 +72,38 @@ struct Line {
 const Line Line::kEmpty{nullptr, nullptr, 0, 0.0, 0};
 
 inline static Grammar* create_grammar(Config* config) {
-  if (auto* grammar = Grammar::Require("grammar")) {
+  string component = "grammar";
+  if (config) {
+    config->GetString("grammar/component", &component);
+  }
+  if (auto* grammar = Grammar::Require(component)) {
     return grammar->Create(config);
+  }
+  if (component != "grammar") {
+    LOG(WARNING) << "unknown grammar component: " << component;
   }
   return nullptr;
 }
 
+inline static bool get_apply_grammar_to_sentence(Config* config) {
+  bool apply = false;
+  if (config) {
+    config->GetBool("grammar/apply_to_sentence", &apply);
+  }
+  return apply;
+}
+
 Poet::Poet(const Language* language, Config* config, Compare compare)
+    : Poet(language, the<Grammar>(create_grammar(config)), config, compare) {}
+
+Poet::Poet(const Language* language,
+           the<Grammar> grammar,
+           Config* config,
+           Compare compare)
     : language_(language),
-      grammar_(create_grammar(config)),
+      grammar_(std::move(grammar)),
+      sentence_grammar_(get_apply_grammar_to_sentence(config) ? grammar_.get()
+                                                              : nullptr),
       compare_(compare) {}
 
 Poet::~Poet() {}
@@ -191,7 +214,8 @@ struct DynamicProgramming {
 template <class Strategy>
 an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
                                             size_t total_length,
-                                            const string& preceding_text) {
+                                            const string& preceding_text,
+                                            Grammar* grammar) {
   map<int, typename Strategy::State> states;
   Strategy::Initiate(states[0]);
   for (const auto& sv : graph) {
@@ -200,7 +224,7 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
       continue;
     DLOG(INFO) << "start pos: " << start_pos;
     const auto& source_state = states[start_pos];
-    const auto update = [this, &states, &sv, start_pos, total_length,
+    const auto update = [this, grammar, &states, &sv, start_pos, total_length,
                          &preceding_text](const Line& candidate) {
       for (const auto& ev : sv.second) {
         size_t end_pos = ev.first;
@@ -216,7 +240,7 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
               candidate.empty() ? preceding_text : candidate.context();
           double weight = candidate.weight +
                           Grammar::Evaluate(context, entry->text, entry->weight,
-                                            is_rear, grammar_.get());
+                                            is_rear, grammar);
           Line new_line{&candidate, entry.get(), end_pos, weight};
           Line& best = Strategy::BestLineToUpdate(target_state, new_line);
           if (best.empty() || compare_(best, new_line)) {
@@ -246,15 +270,16 @@ an<Sentence> Poet::MakeSentenceWithStrategy(const WordGraph& graph,
 an<Sentence> Poet::MakeSentence(const WordGraph& graph,
                                 size_t total_length,
                                 const string& preceding_text) {
-  return grammar_ ? MakeSentenceWithStrategy<BeamSearch>(graph, total_length,
-                                                         preceding_text)
-                  : MakeSentenceWithStrategy<DynamicProgramming>(
-                        graph, total_length, preceding_text);
+  return sentence_grammar_
+             ? MakeSentenceWithStrategy<BeamSearch>(
+                   graph, total_length, preceding_text, sentence_grammar_)
+             : MakeSentenceWithStrategy<DynamicProgramming>(
+                   graph, total_length, preceding_text, nullptr);
 }
 
 // Make `max_sentences` sentences using beam search and dp on word graph.
 //
-// There is no strategy because it unconditionally use grammar.
+// There is no strategy because it unconditionally uses beam search.
 deque<an<Sentence>> Poet::MakeSentences(const WordGraph& graph,
                                         size_t total_length,
                                         const string& preceding_text,
@@ -285,7 +310,7 @@ deque<an<Sentence>> Poet::MakeSentences(const WordGraph& graph,
               source_line.empty() ? preceding_text : source_line.context();
           double weight = source_line.weight +
                           Grammar::Evaluate(context, entry->text, entry->weight,
-                                            is_rear, grammar_.get());
+                                            is_rear, sentence_grammar_);
           size_t new_hash = source_line.text_hash;
           for (char c : entry->text) {
             new_hash = new_hash * 31 + c;
