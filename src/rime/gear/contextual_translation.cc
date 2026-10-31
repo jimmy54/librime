@@ -58,7 +58,8 @@ void ContextualTranslation::AppendToCache(vector<of<Phrase>>& queue) {
   if (queue.empty())
     return;
   DLOG(INFO) << "appending to cache " << queue.size() << " candidates.";
-  std::sort(queue.begin(), queue.end(), compare_by_weight_desc);
+  // grammar scores are frequently tied; keep the original order on ties
+  std::stable_sort(queue.begin(), queue.end(), compare_by_weight_desc);
   std::copy(queue.begin(), queue.end(), std::back_inserter(cache_));
   queue.clear();
 }

@@ -34,6 +34,10 @@ class Poet {
   Poet(const Language* language,
        Config* config,
        Compare compare = CompareWeight);
+  Poet(const Language* language,
+       the<Grammar> grammar,
+       Config* config,
+       Compare compare = CompareWeight);
   ~Poet();
 
   an<Sentence> MakeSentence(const WordGraph& graph,
@@ -66,10 +70,12 @@ class Poet {
   template <class Strategy>
   an<Sentence> MakeSentenceWithStrategy(const WordGraph& graph,
                                         size_t total_length,
-                                        const string& preceding_text);
+                                        const string& preceding_text,
+                                        Grammar* grammar);
 
   const Language* language_;
   the<Grammar> grammar_;
+  Grammar* sentence_grammar_ = nullptr;
   Compare compare_;
 };
 
