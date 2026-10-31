@@ -37,6 +37,16 @@ target_link_libraries(rime_patch
   ${rime_library}
   ${rime_levers_library})
 
+set(rime_latency_src "rime_latency.cc")
+add_executable(rime_latency ${rime_latency_src})
+target_compile_definitions(rime_latency PRIVATE RIME_IMPORTS)
+target_link_libraries(rime_latency ${rime_library})
+
+set(rime_eval_src "rime_eval.cc")
+add_executable(rime_eval ${rime_eval_src})
+target_compile_definitions(rime_eval PRIVATE RIME_IMPORTS)
+target_link_libraries(rime_eval ${rime_library})
+
 set(rime_yaml_compiler_src "rime_yaml_compiler.cc")
 add_executable(rime_yaml_compiler ${rime_yaml_compiler_src})
 target_include_directories(rime_yaml_compiler BEFORE PRIVATE 

@@ -1,0 +1,1279 @@
+在 `rime_api_console` 中添加了	san ge	三个
+在 `rime_api_console` 中添加了三个 TX 	cha jian	插件
+在 `rime_api_console` 中添加了三个 TX 插件测试命令,	yong yu	用于
+在 `rime_api_console` 中添加了三个 TX 插件测试命令,用于	ce shi	测试
+在 `rime_api_console` 中添加了三个 TX 插件测试命令,用于测试 TX 	yin qing	引擎
+获取当前 TX 	yin qing	引擎
+- 选择成功后会自动	xian shi	显示
+- 会在选择的候选词后	tian jia	添加
+- 会在选择的候选词后添加分割符(从 `speller/delimiter` 	pei zhi	配置
+- 候选词应该按照 TX 	yin qing	引擎
+- 候选词应该按照 TX 引擎的	luo ji	逻辑
+- 候选词数量应该	he li	合理
+TX 引擎在 `SelectCandidate` 中	tian jia	添加
+- 确保 TX 插件已正确	bian yi	编译
+- 确保 TX 插件已正确编译和	jia zai	加载
+- 检查 schema 配置中是否启用了 TX 	yin qing	引擎
+# TX插件功能启用状态	jian cha	检查
+**测试基类**: 继承自 `TxApiTestBase`，	fu yong	复用
+**测试基类**: 继承自 `TxApiTestBase`，复用现有的测试环境	pei zhi	配置
+**测试对象**: 三个新增的功能启用状态	jian cha	检查
+**目的**: 验证API能够	zheng chang	正常
+**目的**: 验证传入	wu xiao	无效
+**目的**: 验证传入无效session_id	shi de	时的
+**目的**: 验证	duo ci	多次
+**目的**: 验证多次调用返回结果	de yi	的一
+- 同一个API的	duo ci	多次
+- 同一个API的多次调用应	fan hui	返回
+- 同一个API的多次调用应返回相同的	jie guo	结果
+- 配置未变化时，状态应保持	yi zhi	一致
+- 三个功能可以独立	qi yong	启用
+- 三个功能可以独立启用/	jin yong	禁用
+- 总体性能	man zu	满足
+**目的**: 验证API在	bing fa	并发
+**目的**: 验证状态检查API与功能	she zhi	设置
+- 只有在功能	qi yong	启用
+- 只有在功能启用时才能成功	she zhi	设置
+**目的**: 打印当前schema的配置信息，	bian yu	便于
+**目的**: 打印当前schema的配置信息，便于	tiao shi	调试
+- 特定的schema配置文件（	yong yu	用于
+- **API使用文档**: `../	jian cha	检查
+- **实现总结**: `../功能启用状态	jian cha	检查
+- **实现总结**: `../功能启用状态检查API	shi xian	实现
+- **运行脚本**: `运行功能状态检查	ce shi	测试
+- **v1.0** (2024-11-21): 初始版本，	bao han	包含
+- **v1.0** (2024-11-21): 初始版本，包含8个基础测试	yong li	用例
+两者使用的是 **完全相同** 的	ji zhi	机制
+两者使用的是 **完全相同** 的机制，都通过 `poet_->ContextualWeighted()` 	shi xian	实现
+虽然都使用 `ContextualWeighted`，	dan zai	但在
+虽然都使用 `ContextualWeighted`，但在 **	zao ju	造句
+- ✅ 适用于 **	xing ma	形码
+- ✅ 适用于 **形码输入法**（	wu bi	五笔
+- ✅ 适用于 **	yin ma	音码
+- ✅ 适用于 **音码输入法**（拼音、	zhu yin	注音
+| **触发条件** | 	mei you	没有
+| **触发条件** | 没有候选 / 补全	you xian	优先
+| **触发条件** | 没有候选 / 补全优先 | 2+	yin jie	音节
+| **触发条件** | 没有候选 / 补全优先 | 2+音节 + 	wu jing	无精
+| **适用场景** | 	xing ma	形码
+| **适用场景** | 形码输入法 | 	yin ma	音码
+**无需配置**，自动根据条件	chu fa	触发
+两者使用的是 **完全相同** 的	ji zhi	机制
+| **造句触发** | 	mei you	没有
+| **造句触发** | 没有候选 / 补全	you xian	优先
+| **造句触发** | 没有候选 / 补全优先 | 2+	yin jie	音节
+| **造句触发** | 没有候选 / 补全优先 | 2+音节 + 	wu jing	无精
+| **适用输入法** | 	xing ma	形码
+| **适用输入法** | 形码（	wu bi	五笔
+| **适用输入法** | 形码（五笔、郑码） | 	yin ma	音码
+| **适用输入法** | 形码（五笔、郑码） | 音码（拼音、	zhu yin	注音
+| **上下文	jia quan	加权
+| **上下文加权** | 	qi yong	启用
+| **上下文加权** | 启用	xuan xiang	选项
+1. ✅ 上下文	jia quan	加权
+1. ✅ 上下文加权是 **通用需求**（	xing ma	形码
+1. ✅ 上下文加权是 **通用需求**（形码、	yin ma	音码
+3. ✅ 分组排序 + 	xian zhi	限制
+- 在构建	shi ping	时评
+- [Rime JavaScript 插件开发	zhi nan	指南
+- [Rime JavaScript 插件开发指南](#rime-javascript-插件开发	zhi nan	指南
+- [项目结构 （	shi li	示例
+- [项目结构 （示例	cha jian	插件
+- [项目结构 （示例插件仓库）](#项目结构-	shi li	示例
+- [项目结构 （示例插件仓库）](#项目结构-示例	cha jian	插件
+- [创建插件	mu lu	目录
+- [创建插件目录](#创建	cha jian	插件
+- [创建插件目录](#创建插件	mu lu	目录
+- [编写插件主文件](#	bian xie	编写
+- [编写插件主文件](#编写	cha jian	插件
+- [配置输入法方案](#	pei zhi	配置
+- [插件生命周期](#	cha jian	插件
+- [2. 初始化	jie duan	阶段
+- [2. 初始化阶段：调用	cha jian	插件
+- [2. 初始化阶段：调用插件的构造函数 `constructor()`](#2-初始化	jie duan	阶段
+- [2. 初始化阶段：调用插件的构造函数 `constructor()`](#2-初始化阶段调用	cha jian	插件
+- [3. 运行阶段：调用	cha jian	插件
+- [3. 运行阶段：调用插件的主方法 `process()`、`translate()`、`filter()`](#3-运行阶段调用	cha jian	插件
+- [4. 卸载阶段：调用	cha jian	插件
+- [4. 卸载阶段：调用插件的卸载	han shu	函数
+- [4. 卸载阶段：调用插件的卸载函数 `finalizer()`](#4-卸载	jie duan	阶段
+- [4. 卸载阶段：调用插件的卸载函数 `finalizer()`](#4-卸载阶段调用	cha jian	插件
+- [4. 卸载阶段：调用插件的卸载函数 `finalizer()`](#4-卸载阶段调用插件的卸载	han shu	函数
+- [测试文件	zu zhi	组织
+- [测试文件组织](#测试文件	zu zhi	组织
+- [编写测试	yong li	用例
+- [编写测试用例](#编写测试	yong li	用例
+- [使用其他 JavaScript 	yin qing	引擎
+- [使用其他 JavaScript 引擎](#	shi yong	使用
+- [使用其他 JavaScript 引擎](#使用其他-javascript-	yin qing	引擎
+- [类型定义	wen jian	文件
+- [类型定义文件](#类型定义	wen jian	文件
+libRime-qjs 插件系统允许开发者	shi yong	使用
+libRime-qjs 插件系统允许开发者使用 JavaScript 	yu yan	语言
+libRime-qjs 插件系统允许开发者使用 JavaScript 语言为 Rime 输入法开发各类功能	zu jian	组件
+libRime-qjs 插件系统允许开发者使用 JavaScript 语言为 Rime 输入法开发各类功能组件，如	an jian	按键
+本文档将	yin dao	引导
+本文档将引导您开发、	ce shi	测试
+本文档将引导您开发、测试和	bu shu	部署
+本文档将引导您开发、测试和部署这些 JavaScript 	cha jian	插件
+它处理输入法的基本功能，如文字输入、候选词	sheng cheng	生成
+它处理输入法的基本功能，如文字输入、候选词生成、	ci dian	词典
+它处理输入法的基本功能，如文字输入、候选词生成、词典	guan li	管理
+它处理输入法的基本功能，如文字输入、候选词生成、词典管理等，	bing wei	并为
+它处理输入法的基本功能，如文字输入、候选词生成、词典管理等，并为各类	zu jian	组件
+它处理输入法的基本功能，如文字输入、候选词生成、词典管理等，并为各类组件提供统一的	jie kou	接口
+- **libRime-qjs**：JavaScript 运行时	cha jian	插件
+- **libRime-qjs**：JavaScript 运行时插件，是	lian jie	连接
+- **libRime-qjs**：JavaScript 运行时插件，是连接 libRime 和 JavaScript 	cha jian	插件
+它基于 QuickJS 	yin qing	引擎
+它基于 QuickJS 引擎，提供了 JavaScript 	cha jian	插件
+它基于 QuickJS 引擎，提供了 JavaScript 插件的	jia zai	加载
+它基于 QuickJS 引擎，提供了 JavaScript 插件的加载、执行环境和必要的 API 	jie kou	接口
+它基于 QuickJS 引擎，提供了 JavaScript 插件的加载、执行环境和必要的 API 接口，使开发者能够用 JavaScript 语言开发输入法	zu jian	组件
+- **Squirrel/Weasel/Fcitx/..**：输入法的	qian duan	前端
+- **Squirrel/Weasel/Fcitx/..**：输入法的前端	cheng xu	程序
+- **Squirrel/Weasel/Fcitx/..**：输入法的前端程序，	fu ze	负责
+- **Squirrel/Weasel/Fcitx/..**：输入法的前端程序，负责与操作系统	jin xing	进行
+- **Squirrel/Weasel/Fcitx/..**：输入法的前端程序，负责与操作系统进行	jiao hu	交互
+它们接收	yong hu	用户
+它们接收用户的按键输入，	jiang qi	将其
+它们接收用户的按键输入，将其	chuan di	传递
+它们接收用户的按键输入，将其传递给 libRime 	chu li	处理
+它们接收用户的按键输入，将其传递给 libRime 处理，并将处理结果（如候选词）	zhan shi	展示
+不同的	qian duan	前端
+不同的前端	cheng xu	程序
+不同的前端程序	shi pei	适配
+- **plugin.js**：用户开发的具体	cha jian	插件
+- **plugin.js**：用户开发的具体插件	shi xian	实现
+- **plugin.js**：用户开发的具体插件实现，	ke yi	可以
+- **plugin.js**：用户开发的具体插件实现，可以	bao han	包含
+- **plugin.js**：用户开发的具体插件实现，可以包含多种类型的输入法	zu jian	组件
+4. libRime-qjs 负责执行这些	cha jian	插件
+5. libRime 处理完成后，将	jie guo	结果
+5. libRime 处理完成后，将结果传回	qian duan	前端
+1. 备份 Squirrel 输入法的所有动态链接库	wen jian	文件
+3. 如果 `/Library/Input Methods/Squirrel.app/Contents/Frameworks/librime.x.xx.x.dylib` 文件与压缩包的	ban ben	版本
+3. 如果 `/Library/Input Methods/Squirrel.app/Contents/Frameworks/librime.x.xx.x.dylib` 文件与压缩包的版本不一致，可替换为压缩包	li de	里的
+- 如看到	lei si	类似
+- 如看到类似	shu chu	输出
+- 如看到类似输出，	biao shi	表示
+5. 如果遇到问题，请报 issue 并提供	xiang xi	详细
+5. 如果遇到问题，请报 issue 并提供详细重现	bu zhou	步骤
+或删除`rime-plugins/librime-qjs.dylib` 	wen jian	文件
+或删除`rime-plugins/librime-qjs.dylib` 文件，	bing shi	并使
+或删除`rime-plugins/librime-qjs.dylib` 文件，并使用	bei fen	备份
+或删除`rime-plugins/librime-qjs.dylib` 文件，并使用备份	ban ben	版本
+或删除`rime-plugins/librime-qjs.dylib` 文件，并使用备份版本	hui fu	恢复
+- 右键点击系统托盘	zhong de	中的
+- 把压缩包	li de	里的
+- 把压缩包里的 `rime.dll` 复制到 `C:\Program Files\Rime\weasel-x.xx.x`，替换上一步	bei fen	备份
+- 注：该动态链接库已包含 libRime、libRime-qjs、libRime-lua、librime-octagram、librime-predict 等	zu jian	组件
+- 右键点击系统托盘	zhong de	中的
+- 右键点击系统托盘	zhong de	中的
+6. 如果遇到问题，请报 issue 并提供	xiang xi	详细
+6. 如果遇到问题，请报 issue 并提供详细重现	bu zhou	步骤
+或删除`C:\Program Files\Rime\weasel-x.xx.x\rime.dll` 	wen jian	文件
+或删除`C:\Program Files\Rime\weasel-x.xx.x\rime.dll` 文件，	bing shi	并使
+或删除`C:\Program Files\Rime\weasel-x.xx.x\rime.dll` 文件，并使用	bei fen	备份
+或删除`C:\Program Files\Rime\weasel-x.xx.x\rime.dll` 文件，并使用备份	ban ben	版本
+或删除`C:\Program Files\Rime\weasel-x.xx.x\rime.dll` 文件，并使用备份版本	hui fu	恢复
+- qjs: quickjs 命令行	cheng xu	程序
+- qjs: quickjs 命令行程序，	yong yu	用于
+- qjs: quickjs 命令行程序，用于	ce shi	测试
+- qjs: quickjs 命令行程序，用于测试 JavaScript 	cha jian	插件
+- qjs: quickjs 命令行程序，用于测试 JavaScript 插件，已	fu zai	附在
+- 适配 macOS 的程序名为 qjs， 	shi pei	适配
+- 命令行	zhi xing	执行
+- 命令行执行 `./qjs --help` 查看版本	xin xi	信息
+- 将其复制到 `<Rime-user-folder>/js` 目录下，可执行 `./qjs ./tests/<your-plugin>.test.js` 	ce shi	测试
+- 该程序已	da shang	打上
+- 该程序已打上	jia zai	加载
+- 该程序已打上加载 node module 的	bu ding	补丁
+- 该程序已打上加载 node module 的补丁，不能用 quickjs 	guan fang	官方
+- 该程序已打上加载 node module 的补丁，不能用 quickjs 官方仓库发布的	tong ming	同名
+- 该程序已打上加载 node module 的补丁，不能用 quickjs 官方仓库发布的同名	cheng xu	程序
+- typescript: 可选，用于类型	ti shi	提示
+"@before 1"表示把处理器	cha jian	插件
+"@before 1"表示把处理器插件	zhi yu	置于
+"@before 1"表示把处理器插件置于 Rime 	mo ren	默认
+"@before 1"表示把处理器插件置于 Rime 默认处理器前，以保证	cha jian	插件
+"@before 1"表示把处理器插件置于 Rime 默认处理器前，以保证插件	sheng xiao	生效
+qjs_processor@processor_example      # 示例处理器，@ 后面的	bu fen	部分
+因为使用"@before"	yu fa	语法
+因为使用"@before"语法，	qian mian	前面
+因为使用"@before"语法，前面不要加 - 	fu hao	符号
+- qjs_translator@translator_example  # 示例转换器，@ 后面的	bu fen	部分
+因为使用"+"	yu fa	语法
+因为使用"+"语法，	qian mian	前面
+因为使用"+"语法，前面需要加 - 	fu hao	符号
+- qjs_filter@filter_example          # 示例过滤器，@ 后面的	bu fen	部分
+因为使用"+"	yu fa	语法
+因为使用"+"语法，	qian mian	前面
+因为使用"+"语法，前面需要加 - 	fu hao	符号
+// 保存为二进制	ge shi	格式
+// 保存为二进制格式（加快后续	jia zai	加载
+- 编写代码时会获得类型	ti shi	提示
+- 编写代码时会获得类型	ti shi	提示
+- 确保使用的 `rime.d.ts` 	wen jian	文件
+- 确保使用的 `rime.d.ts` 文件	lai zi	来自
+- 确保使用的 `rime.d.ts` 文件来自	tong yi	同一
+- 确保使用的 `rime.d.ts` 文件来自同一	ban ben	版本
+- 如遇到类型错误，请更新 `rime.d.ts` 	wen jian	文件
+- 确保 `typeRoots` 路径	zhi xiang	指向
+# TX插件功能启用状态	jian cha	检查
+本文档介绍TX	cha jian	插件
+本文档介绍TX插件	zhong xin	中新
+本文档介绍TX插件中新增的	san ge	三个
+本文档介绍TX插件中新增的三个API	jie kou	接口
+本文档介绍TX插件中新增的三个API接口，	yong yu	用于
+本文档介绍TX插件中新增的三个API接口，用于	jian cha	检查
+这些API通过读取schema配置文件	zhong de	中的
+这些API通过读取schema配置文件中的`engine`	pei zhi	配置
+这些API通过读取schema配置文件中的`engine`配置节，	jian cha	检查
+这些API通过读取schema配置文件中的`engine`配置节，检查相应的	zu jian	组件
+- **True**: 相应的	zu jian	组件
+- **True**: 相应的组件	yi zai	已在
+- **True**: 相应的组件已在schema配置中	qi yong	启用
+1. **配置格式支持**：API	zhi chi	支持
+1. **配置格式支持**：API支持识别带`@`前缀的	zu jian	组件
+1. **配置格式支持**：API支持识别带`@`前缀的组件	ming cheng	名称
+1. **配置格式支持**：API支持识别带`@`前缀的组件名称，	li ru	例如
+2. **性能考虑**：这些API会读取schema	pei zhi	配置
+2. **性能考虑**：这些API会读取schema配置，建议在	yi xia	以下
+2. **性能考虑**：这些API会读取schema配置，建议在以下	chang jing	场景
+4. **日志输出**：API	hui shu	会输
+4. **日志输出**：API会输出详细的日志信息，	bian yu	便于
+4. **日志输出**：API会输出详细的日志信息，便于	tiao shi	调试
+API通过以下	bu zhou	步骤
+5. 遍历列表，查找	zhi ding de	指定的
+5. 遍历列表，查找指定的	zu jian	组件
+5. 遍历列表，查找指定的组件	ming cheng	名称
+6. 支持识别带`@`前缀的	zu jian	组件
+6. 支持识别带`@`前缀的组件	ming cheng	名称
+- **使用文档**: `plugins/tx/	jian cha	检查
+- **2024-11-21**: 初始版本，	tian jia	添加
+- **2024-11-21**: 初始版本，添加三个功能启用状态	jian cha	检查
+按照您的要求，已完成	yi xia	以下
+按照您的要求，已完成以下	san xiang	三项
+现在 StrokeFilter 已经注册到 RIME 的	zu jian	组件
+现在 TxEngine 不再	guan li	管理
+现在 TxEngine 不再管理 StrokeFilter，StrokeFilter 	zuo wei	作为
+现在 TxEngine 不再管理 StrokeFilter，StrokeFilter 作为独立的	zu jian	组件
+然后在 Engine 初始化时自动创建和	guan li	管理
+3. **更新测试** - 根据	xin de	新的
+4. **集成测试** - 在实际输入法环境中	yan zheng	验证
+已按照您的要求完成了	san xiang	三项
+代码编译成功，	dan xu	但需
+代码编译成功，但需要进一步	shi xian	实现
+代码编译成功，但需要进一步实现 StrokeFilterComponent 或选择其他方案来正确创建和	guan li	管理
+代码编译成功，但需要进一步实现 StrokeFilterComponent 或选择其他方案来正确创建和管理 StrokeFilter 	shi li	实例
+- ✅ 完整实现 `ReverseLookup()` 	han shu	函数
+- ✅ 完整实现 `ReverseLookup()` 函数，支持多字中文	fan cha	反查
+**功能**: 将	xuan zhong	选中
+**功能**: 将选中的候选文本（中文）	fan cha	反查
+**功能**: 将选中的候选文本（中文）反查	wei dui	为对
+- `result` - 拼音字符串，	duo ge	多个
+- `result` - 拼音字符串，多个拼音用空格	fen ge	分隔
+中文字符在 UTF-8 编码中占用 3 个	zi jie	字节
+`ReverseDb::Lookup()` 只支持	dan zi	单字
+`ReverseDb::Lookup()` 只支持单字	cha xun	查询
+`ReverseDb::Lookup()` 只支持单字查询，	duo zi	多字
+使用组件工厂模式创建	fan cha	反查
+在 schema 配置文件中	ke yi	可以
+在 schema 配置文件中可以自定义	fan cha	反查
+- 文件格式: RIME 	fan cha	反查
+- 文件格式: RIME 反查数据库二进制	ge shi	格式
+- 位置: 与其他 RIME 数据文件在	tong yi	同一
+- 位置: 与其他 RIME 数据文件在同一	mu lu	目录
+| 字典未加载 | 	fan hui	返回
+| 字符不在字典 | 保留原	zi fu	字符
+| 字符不在字典 | 保留原字符 | 	ji xu	继续
+| 字符不在字典 | 保留原字符 | 继续	chu li	处理
+1. **查询次数**: 每个字符	yi ci	一次
+1. **查询次数**: 每个字符一次字典	cha xun	查询
+对于常见的 2-5 	zi ci	字词
+2. 单个字符	fan cha	反查
+2. 单个字符反查失败 → 保留原	zi fu	字符
+2. 单个字符反查失败 → 保留原字符，	ji xu	继续
+2. 单个字符反查失败 → 保留原字符，继续	chu li	处理
+3. UTF-8 解析错误 → 	ji lu	记录
+3. UTF-8 解析错误 → 记录	jing gao	警告
+1. **缓存机制**: 缓存常用字的	fan cha	反查
+1. **缓存机制**: 缓存常用字的反查	jie guo	结果
+2. **批量查询**: 	you hua	优化
+2. **批量查询**: 优化	duo zi	多字
+2. **批量查询**: 优化多字	cha xun	查询
+3. **格式化	xuan xiang	选项
+3. **格式化选项**: 	zhi chi	支持
+3. **格式化选项**: 支持不同的拼音	ge shi	格式
+3. **格式化选项**: 支持不同的拼音格式（带	sheng diao	声调
+3. **格式化选项**: 支持不同的拼音格式（带声调、	bu dai	不带
+3. **格式化选项**: 支持不同的拼音格式（带声调、不带	sheng diao	声调
+5. **多字典	zhi chi	支持
+5. **多字典支持**: 同时支持	duo ge	多个
+5. **多字典支持**: 同时支持多个	fan cha	反查
+- 完整实现了	ji yu	基于
+- 完整实现了基于 `ReverseLookupDictionary` 的拼音	fan cha	反查
+- 支持单字和	duo zi	多字
+- 支持单字和多字文本的	fan cha	反查
+- 容错处理，	fan cha	反查
+- 容错处理，反查失败保留原	zi fu	字符
+该实现可以直接	yong yu	用于
+该实现可以直接用于生产环境，为 TxEngine 提供可靠的拼音	fan cha	反查
+本文档	fen xi	分析
+本文档分析librime	yuan ma	源码
+当进行预测匹配时，系统会	sheng cheng	生成
+当进行预测匹配时，系统会生成	lin shi	临时
+当进行预测匹配时，系统会生成临时的comment	xian shi	显示
+当进行预测匹配时，系统会生成临时的comment显示	sheng yu	剩余
+- 场景：用户输入	bu fen	部分
+- 场景：用户输入部分编码时，	xian shi	显示
+- 示例：输入"zh"，候选词"	zhong guo	中国
+用户词典	zhong de	中的
+用户词典中的	ci tiao	词条
+用户词典中的词条可以有自定义编码，超出匹配长度的	bu fen	部分
+- 场景：用户自定义	ci tiao	词条
+- 场景：用户自定义词条的编码	chang yu	长于
+虽然在当前代码中没有找到	zhi jie	直接
+虽然在当前代码中没有找到直接从	ci dian	词典
+虽然在当前代码中没有找到直接从词典文件读取comment的	luo ji	逻辑
+虽然在当前代码中没有找到直接从词典文件读取comment的逻辑，但`DictEntry`结构体预留了`comment`字段，理论上可以从	ci dian	词典
+虽然在当前代码中没有找到直接从词典文件读取comment的逻辑，但`DictEntry`结构体预留了`comment`字段，理论上可以从词典	yuan wen jian	源文件
+**作用**：从	ci dian	词典
+- 每次调用都会创建	xin de	新的
+- 每次调用都会创建新的字符串	fu ben	副本
+**重要**：调用者必须确保正确调用`RimeCandidateListEnd`来释放内存，否则会	dao zhi	导致
+1. **动态生成**：主要在运行时	sheng cheng	生成
+1. **动态生成**：主要在运行时生成，	bu shi	不是
+1. **动态生成**：主要在运行时生成，不是从	ci dian	词典
+1. **动态生成**：主要在运行时生成，不是从词典	wen jian	文件
+1. **动态生成**：主要在运行时生成，不是从词典文件	zhi jie	直接
+3. **格式统一**：	dou shi	都使
+3. **格式统一**：都使用`~`前缀	biao shi	表示
+**问题**：当用户输入 `w` 时，	ru he	如何
+**问题**：当用户输入 `w` 时，如何	tong shi	同时
+**问题**：当用户输入 `w` 时，如何同时匹配到 `e` 和 `w` 对应的	yin jie	音节
+- **Syllabary（音节表）**：	yuan shi	原始
+- **Syllabary（音节表）**：原始	yin jie	音节
+- **Syllabary（音节表）**：原始音节	ji he	集合
+- **Syllabary（音节表）**：原始音节集合，	lai zi	来自
+- **Syllabary（音节表）**：原始音节集合，来自	ci dian	词典
+- **Syllabary（音节表）**：原始音节集合，来自词典	wen jian	文件
+- **Script（脚本）**：经过代数运算	hou de	后的
+- **Script（脚本）**：经过代数运算后的	yin jie	音节
+- **Script（脚本）**：经过代数运算后的音节映射表，	jie gou	结构
+- 值：该拼写对应的所有	yin jie	音节
+- 值：该拼写对应的所有音节	ji qi	及其
+- 值：该拼写对应的所有音节及其	shu xing	属性
+- **Prism（音节图）**：	ji yu	基于
+- **Prism（音节图）**：基于 Script 	gou jian	构建
+- **Prism（音节图）**：基于 Script 构建的双数组 Trie 树，	yong yu	用于
+这样用户输入 `w` 时，	ji neng	既能
+这样用户输入 `w` 时，既能匹配到	yin jie	音节
+这样用户输入 `w` 时，既能匹配到音节 `w`，也能匹配到	yin jie	音节
+- **右侧（replacement）**：生成	xin de	新的
+> "当 Script 中存在键 'e' 时，创建新键 'w'，并让 'w' 也能匹配到 'e' 对应的	yin jie	音节
+如果需要	shuang xiang	双向
+- **编译期	ji suan	计算
+- **编译期计算**：所有代数运算在部署时	wan cheng	完成
+- **编译期计算**：所有代数运算在部署时完成，	sheng cheng	生成
+- **编译期计算**：所有代数运算在部署时完成，生成 `.prism.bin` 	wen jian	文件
+- **运行期	cha xun	查询
+- **运行期查询**：	shi yong	使用
+- **运行期查询**：使用双数组 Trie 树（Darts），	cha xun	查询
+- **内存映射**：Prism 	shi yong	使用
+- **内存映射**：Prism 使用 mmap，	wu xu	无需
+- **内存映射**：Prism 使用 mmap，无需	jia zai	加载
+- **内存映射**：Prism 使用 mmap，无需加载	zheng ge	整个
+- **内存映射**：Prism 使用 mmap，无需加载整个	wen jian	文件
+格式：`用户输入 \t 	shi ji	实际
+格式：`用户输入 \t 实际	yin jie	音节
+格式：`用户输入 \t 实际音节 \t 类型 \t 可信度 \t 	ti shi	提示
+# RIME输入法智能输入功能实现	zhi nan	指南
+本文档详细介绍了	ru he	如何
+本文档详细介绍了如何在RIME输入法框架中实现	lei si	类似
+本文档详细介绍了如何在RIME输入法框架中实现类似Gboard的智能输入功能，包括可行性	fen xi	分析
+- [基础模糊输入容错](#1-	ji chu	基础
+- [上下文	gan zhi	感知
+- [上下文感知的候选词排序](#3-上下文	gan zhi	感知
+- [用户个性化	xue xi	学习
+- [用户个性化学习](#4-	yong hu	用户
+- [用户个性化学习](#4-用户个性化	xue xi	学习
+1. 神经空间模型（NSM）- 将模糊	chu mo	触摸
+2. 有限状态转换器（FST）- 	yong yu	用于
+2. 有限状态转换器（FST）- 用于词汇和	yu fa	语法
+2. 有限状态转换器（FST）- 用于词汇和语法	yue shu	约束
+2. 有限状态转换器（FST）- 用于词汇和语法约束的	yu yan	语言
+2. 有限状态转换器（FST）- 用于词汇和语法约束的语言	jian mo	建模
+4. 预测/建议系统和自动纠错	ji zhi	机制
+1. **现有架构基础**: librime已经有输入法框架的核心	zu jian	组件
+1. **现有架构基础**: librime已经有输入法框架的核心组件，如	yin qing	引擎
+1. **现有架构基础**: librime已经有输入法框架的核心组件，如引擎、上下文	chu li	处理
+2. **模块化	she ji	设计
+2. **模块化设计**: RIME的	she ji	设计
+2. **模块化设计**: RIME的设计允许	tong guo	通过
+2. **模块化设计**: RIME的设计允许通过	tian jia	添加
+2. **模块化设计**: RIME的设计允许通过添加新	zu jian	组件
+3. **开源生态**: 可以利用现有的	kai yuan	开源
+1. **资源限制**: Gboard由Google开发，拥有大量	shu ju	数据
+1. **资源限制**: Gboard由Google开发，拥有大量数据和计算资源，RIME可能	shou xian	受限
+2. **实现复杂性**: 	shen jing	神经
+2. **实现复杂性**: 神经空间模型和FST解码器的	shi xian	实现
+3. **训练数据获取**: 缺乏	lei si	类似
+3. **训练数据获取**: 缺乏类似Google的大规模用户反馈	shu ju	数据
+3. **训练数据获取**: 缺乏类似Google的大规模用户反馈数据	yong yu	用于
+- **简化方案**: 可以实现	yi ge	一个
+- **简化方案**: 可以实现一个	ji yu	基于
+- **简化方案**: 可以实现一个基于高斯	mo xing	模型
+- **简化方案**: 可以实现一个基于高斯模型的简化版本，	zuo wei	作为
+- **简化方案**: 可以实现一个基于高斯模型的简化版本，作为	qi dian	起点
+- **进阶方案**: 	ji cheng	集成
+- **进阶方案**: 集成轻量级LSTM	mo xing	模型
+- **进阶方案**: 集成轻量级LSTM模型（	ru shi	如使
+- **进阶方案**: 集成轻量级LSTM模型（如使用TensorFlow Lite）	chu li	处理
+- **进阶方案**: 集成轻量级LSTM模型（如使用TensorFlow Lite）处理	chu mo	触摸
+- 使用开源的FST库（如OpenFst）	gou jian	构建
+- 构建n-gram语言模型预测下一个可能的	ci yu	词语
+- 为中文输入	she ji	设计
+- 实现编辑距离算法	jian ce	检测
+- 使用统计方法	ji suan	计算
+- 使用统计方法计算用户输入的可能正确	xing shi	形式
+### 第一阶段：基础设施	da jian	搭建
+### 第一阶段：基础设施搭建（1-2	ge yue	个月
+- 学习FST和神经网络在输入法中的	ying yong	应用
+- 研究TensorFlow Lite等小型设备	shang de	上的
+- 研究TensorFlow Lite等小型设备上的机器学习	shi xian	实现
+- 修改上下文	chu li	处理
+- 修改上下文处理，	zhi chi	支持
+### 第二阶段：核心算法	shi xian	实现
+### 第二阶段：核心算法实现（2-3	ge yue	个月
+- 实现基础的	chu mo	触摸
+- 实现基础的触摸	mo xing	模型
+- 实现基础的触摸模型（可以从简单的高斯	mo xing	模型
+- 实现基础的触摸模型（可以从简单的高斯模型	kai shi	开始
+- 为触屏键盘设计坐标	ying she	映射
+- 设计匿名数据	shou ji	收集
+- 设计匿名数据收集	ji zhi	机制
+- 设计匿名数据收集机制（需	zheng de	征得
+- 设计匿名数据收集机制（需征得	yong hu	用户
+- 设计匿名数据收集机制（需征得用户	tong yi	同意
+- 调整模型	da xiao	大小
+考虑到资源限制，我们优先实施	yi xia	以下
+创建一个	xin de	新的
+创建一个新的处理器类`FuzzyInputProcessor`，	chu li	处理
+创建一个新的处理器类`FuzzyInputProcessor`，处理输入时的	chu mo	触摸
+创建一个新的处理器类`FuzzyInputProcessor`，处理输入时的触摸	pian yi	偏移
+创建一个n-gram语言模型类和处理器，	chu li	处理
+创建一个n-gram语言模型类和处理器，处理	ci yu	词语
+创建一个	xin de	新的
+创建一个用户习惯学习系统，	ji lu	记录
+创建一个用户习惯学习系统，记录和	ying yong	应用
+创建一个用户习惯学习系统，记录和应用	yong hu	用户
+这四个功能组件需要整合到RIME的	xian you	现有
+- 确保处理顺序	he li	合理
+- 确保处理顺序合理（模糊输入	chu li	处理
+- 确保处理顺序合理（模糊输入处理 -> n-gram	chu li	处理
+- 确保处理顺序合理（模糊输入处理 -> n-gram处理 -> 用户词典	chu li	处理
+- 对大型	mo xing	模型
+- 对大型模型采用内存映射	wen jian	文件
+- 异步保存用户数据	fang zhi	防止
+通过这套技术方案，您可以在RIME框架中实现	lei si	类似
+通过这套技术方案，您可以在RIME框架中实现类似Gboard的智能输入功能，	tong shi	同时
+通过这套技术方案，您可以在RIME框架中实现类似Gboard的智能输入功能，同时	bao chi	保持
+# 取消选择时	shan chu	删除
+# 取消选择时删除分隔符	luo ji	逻辑
+**修改原因**: 取消选择时需要	shan chu	删除
+在 `SelectCandidate` 函数中，选择候选词时会自动	tian jia	添加
+**结果**: 输入	bian wei	变为
+**结果**: 输入变为 `"	wo de	我的
+**结果**: 输入变为 `"我的 "`（	jia she	假设
+**结果**: 输入变为 `"我的 "`（假设选择了"	wo de	我的
+在 `UpdateCancelLastSelected` 函数中，取消选择时会恢复原始	yin jie	音节
+**问题**: 只替换了候选词，但**分隔符没有被	shan chu	删除
+**结果**: 输入	bian wei	变为
+**结果**: 输入变为 `"wode "`（	yin jie	音节
+在取消选择并恢复原始	yin jie	音节
+在取消选择并恢复原始音节后，	jian cha	检查
+在取消选择并恢复原始音节后，检查 `sel_end_` 	wei zhi	位置
+在取消选择并恢复原始音节后，检查 `sel_end_` 位置是否有分隔符，如果有则	shan chu	删除
+**最终结果**: 输入恢复为 `"wode"`，分隔符被正确	shan chu	删除
+- 使用 `find()` 检查	zi fu	字符
+- 确保上下文	zhong de	中的
+删除分隔符后，`sel_end_` 不需要减1，	yin wei	因为
+| **分隔符	chu li	处理
+| **分隔符处理** | 	tian jia	添加
+| **分隔符处理** | 添加分隔符 | 	shan chu	删除
+这次修改确保了**取消选择操作是选择操作的	wan quan	完全
+- 选择时	tian jia	添加
+- 选择时添加分隔符 → 取消时	shan chu	删除
+本目錄收錄供學習與自訂	shi yong de	使用的
+本目錄收錄供學習與自訂使用的	pei zhi	配置
+這些檔案	bu shi	不是
+這些檔案不是 OpenCC 	guan fang	官方
+這些檔案不是 OpenCC 官方內建	pei zhi	配置
+使用時請明確傳入	pei zhi	配置
+使用時請明確傳入配置檔路徑，並用 `--path` 	zhi xiang	指向
+使用時請明確傳入配置檔路徑，並用 `--path` 指向已編譯詞典檔	suo zai	所在
+這些範例以 `data/config/s2twp.json` 為基礎，並	jia ru	加入
+這些範例以 `data/config/s2twp.json` 為基礎，並加入	xiao xing	小型
+示範如何	zai bu	在不
+示範如何在不修改	guan fang	官方
+示範如何在不修改官方詞典檔的情況下	jia ru	加入
+使用者	ke zai	可在
+詞組範例也將對應 inline 條目	jia ru	加入
+這樣更適合作為	shi yong zhe	使用者
+這樣更適合作為使用者自行修改的	mu ban	模板
+這樣更適合作為使用者自行修改的模板：若新增	duo zi	多字
+分詞條目可避免來源詞組在進入轉換鏈	zhi qian	之前
+分詞條目可避免來源詞組在進入轉換鏈之前被切開，導致後續規則無法	ming zhong	命中
+引號範例沒有修改 `segmentation`，因為它只轉換單	zi yuan	字元
+`match_policy: short_circuit`（省略時的預設行為）會在詞典組中找到	di yi	第一
+`match_policy: short_circuit`（省略時的預設行為）會在詞典組中找到第一個	ming zhong	命中
+詞典後	duan lu	短路
+詞典後短路	ting zhi	停止
+當 inline dict 應優	xian sheng	先生
+當 inline dict 應優先生效、且不	xi wang	希望
+为 librime 的 tx 插件实现了	ji yu	基于
+为 librime 的 tx 插件实现了基于	bi hua	笔画
+为 librime 的 tx 插件实现了基于笔画的候选词过滤功能，可以根据候选词第一个	han zi	汉字
+为 librime 的 tx 插件实现了基于笔画的候选词过滤功能，可以根据候选词第一个汉字的	shou bi	首笔
+为 librime 的 tx 插件实现了基于笔画的候选词过滤功能，可以根据候选词第一个汉字的首笔	bi hua	笔画
+- 实现候选词	bian li	遍历
+- 实现候选词遍历和	guo lv	过滤
+- 实现候选词遍历和过滤	luo ji	逻辑
+测试所	you bi	有笔
+- 对比测试：	wu guo	无过
+- 对比测试：无过滤	shi de	时的
+使用 librime 的 `ReverseLookupDictionary` 	tong guo	通过
+使用 librime 的 `ReverseLookupDictionary` 通过 stroke 方案	fan cha	反查
+使用 librime 的 `ReverseLookupDictionary` 通过 stroke 方案反查	han zi	汉字
+使用 librime 的 `ReverseLookupDictionary` 通过 stroke 方案反查汉字的	bi hua	笔画
+使用 utf8.h 库正确处理中文字符的	ti qu	提取
+通过包装	yuan shi	原始
+通过包装原始 Translation，在	bian li	遍历
+通过包装原始 Translation，在遍历过程中应用过滤	luo ji	逻辑
+StrokeFilter 采用延迟初始化策略，	zhi zai	只在
+StrokeFilter 采用延迟初始化策略，只在首次使用时	jia zai	加载
+| 横笔过滤 | ✅ | 	guo lv	过滤
+| 横笔过滤 | ✅ | 过滤	shou bi	首笔
+| 横笔过滤 | ✅ | 过滤首笔为横的	han zi	汉字
+| 竖笔过滤 | ✅ | 	guo lv	过滤
+| 竖笔过滤 | ✅ | 过滤	shou bi	首笔
+| 竖笔过滤 | ✅ | 过滤首笔为竖的	han zi	汉字
+| 撇笔过滤 | ✅ | 	guo lv	过滤
+| 撇笔过滤 | ✅ | 过滤	shou bi	首笔
+| 撇笔过滤 | ✅ | 过滤首笔为撇的	han zi	汉字
+| 捺笔过滤 | ✅ | 	guo lv	过滤
+| 捺笔过滤 | ✅ | 过滤	shou bi	首笔
+| 捺笔过滤 | ✅ | 过滤首笔为捺/	dian de	点的
+| 捺笔过滤 | ✅ | 过滤首笔为捺/点的	han zi	汉字
+| 折笔过滤 | ✅ | 	guo lv	过滤
+| 折笔过滤 | ✅ | 过滤	shou bi	首笔
+| 折笔过滤 | ✅ | 过滤首笔为折的	han zi	汉字
+| 取消过滤 | ✅ | 	hui fu	恢复
+| API 控制 | ✅ | 通过 API 	she zhi	设置
+| 中文文档 | ✅ | 详细的	shi yong	使用
+| 中文文档 | ✅ | 详细的使用和	ce shi	测试
+1. **延迟初始化**: 	zhi zai	只在
+1. **延迟初始化**: 只在需要时	jia zai	加载
+2. **缓存机制**: 可以考虑缓存	fan cha	反查
+2. **缓存机制**: 可以考虑缓存反查	jie guo	结果
+2. **缓存机制**: 可以考虑缓存反查结果（	wei shi xian	未实现
+1. ✨ 添加笔画数	liang guo	量过
+1. ✨ 添加笔画数量过滤（如只显示3	hua de	画的
+2. ✨ 支持多	bi hua	笔画
+2. ✨ 支持多笔画组合	guo lv	过滤
+2. ✨ 支持多笔画组合过滤（如前	liang bi	两笔
+2. ✨ 支持多笔画组合过滤（如前两笔	dou shi	都是
+3. ✨ 添加反查	jie guo	结果
+4. 🚀 支持组合过滤条件（	bi hua	笔画
+4. 🚀 支持组合过滤条件（笔画 + 	bu shou	部首
+4. 🚀 支持组合过滤条件（笔画 + 部首 + 	ci pin	词频
+1. 只支持	shou bi	首笔
+1. 只支持首笔	guo lv	过滤
+1. 只支持首笔过滤，不支持任意位置的	bi hua	笔画
+4. 生僻字可能查不到	bi hua	笔画
+4. 生僻字可能查不到笔画	xin xi	信息
+1. **模块化	she ji	设计
+1. **模块化设计**: 过滤器独立于	yin qing	引擎
+2. **接口清晰**: API 简单易用，	zhi xu	只需
+2. **接口清晰**: API 简单易用，只需两个	han shu	函数
+3. **错误容忍**: 出错时	jiang ji	降级
+4. **日志完善**: 关键步骤	dou you	都有
+6. **文档详细**: 中文文档便于理解和	shi yong	使用
+成功为 librime tx 	cha jian	插件
+成功为 librime tx 插件实现了完整的	bi hua	笔画
+该功能可以有效地根据	han zi	汉字
+该功能可以有效地根据汉字	shou bi	首笔
+该功能可以有效地根据汉字首笔	bi hua	笔画
+该功能可以有效地根据汉字首笔笔画	guo lv	过滤
+该功能可以有效地根据汉字首笔笔画过滤候选词，	ti sheng	提升
+该功能可以有效地根据汉字首笔笔画过滤候选词，提升输入	xiao lv	效率
+该功能可以有效地根据汉字首笔笔画过滤候选词，提升输入效率，特别适合在候选词较多时快速定位目标	han zi	汉字
+OpenCC 默認的簡體到繁體轉換	mo shi	模式
+此模式的目標	bu shi	不是
+此模式的目標不是轉換為	ren he	任何
+此模式的目標不是轉換為任何一個特定國家或地區實際	shi yong de	使用的
+此模式的目標不是轉換為任何一個特定國家或地區實際使用的繁體中文，	er shi	而是
+此模式的目標不是轉換為任何一個特定國家或地區實際使用的繁體中文，而是轉換為一種內部	shi yong de	使用的
+本文所稱「簡體」「繁體」「正體」「標準」等名稱，	jun zhi	均指
+本文所稱「簡體」「繁體」「正體」「標準」等名稱，均指 OpenCC 	pei zhi	配置
+本文所稱「簡體」「繁體」「正體」「標準」等名稱，均指 OpenCC 配置與詞典	zhong de	中的
+工程分類或轉換目標，用於	miao shu	描述
+工程分類或轉換目標，用於描述	zi xing	字形
+OpenCC 對任何特定國家、地區、	zheng zhi	政治
+OpenCC 對任何特定國家、地區、政治實體、語言	zheng ce	政策
+OpenCC 標準繁體	bu shi	不是
+OpenCC 標準繁體不是現實世界中	ren he	任何
+OpenCC 配置名稱	zhong de	中的
+OpenCC 配置名稱中的 `s`、`t`、`tw`、`hk` 是工程上的	mo shi	模式
+* `s` 表示簡體中文，對應 `zh-Hans` 	fang xiang	方向
+* `s` 表示簡體中文，對應 `zh-Hans` 方向，大部分	jie jin	接近
+* `s` 表示簡體中文，對應 `zh-Hans` 方向，大部分接近中國大陸現代簡化字系統（`zh-CN`），但不完全	xiang tong	相同
+* `t` 表示 OpenCC 標準繁體，是 OpenCC 內部	shi yong de	使用的
+* `tw` 表示臺灣正體	mo shi	模式
+* `tw` 表示臺灣正體模式，會在 OpenCC 標準繁體基礎上套用臺灣	zi xing	字形
+* `hk` 表示香港繁體	mo shi	模式
+* `hk` 表示香港繁體模式，會在 OpenCC 標準繁體基礎上套用香港	zi xing	字形
+* 帶 `p` 的模式（如 `s2twp`、`tw2sp`）會額	wai jia	外加
+這些標記可粗略	li jie	理解
+這些標記可粗略理解為	jie jin	接近
+等方向，但不是 BCP 47 語言標籤，也不保證完全符合 CLDR 或某一	guan fang	官方
+OpenCC 標準繁體參	kao le	考了
+* 優先選擇較正確或語義上較適當的	xing shi	形式
+* 盡可能保留	bu tong	不同
+* 盡可能保留不同語義之間	de zi	的字
+* 儘可能保留後續地區轉換	suo xu	所需
+* 儘可能保留後續地區轉換所需的	xin xi	信息
+* 作為進	yi bu	一步
+* 作為進一步轉換為香港標準、臺灣標準等	mo shi	模式
+* 作為進一步轉換為香港標準、臺灣標準等模式的中間	biao shi	表示
+* `台` 在 OpenCC 標準繁體	zhong tong	中通
+* `台` 在 OpenCC 標準繁體中通常轉換為 `臺`，在臺灣模式中	tong chang	通常
+* `台` 在 OpenCC 標準繁體中通常轉換為 `臺`，在臺灣模式中通常	bao chi	保持
+* `台` 在 OpenCC 標準繁體中通常轉換為 `臺`，在臺灣模式中通常保持為 `臺`，在香港模式中則可能進	yi bu	一步
+* `吃` 在 OpenCC 標準繁體中某些語境可轉換為 `喫`，在臺灣、香港模式中	tong chang	通常
+* `吃` 在 OpenCC 標準繁體中某些語境可轉換為 `喫`，在臺灣、香港模式中通常進	yi bu	一步
+* `才` 在 OpenCC 標準繁體中某些語境可轉換為 `纔`，在臺灣、香港模式中	tong chang	通常
+* `才` 在 OpenCC 標準繁體中某些語境可轉換為 `纔`，在臺灣、香港模式中通常進	yi bu	一步
+這是因為 OpenCC 長期參考不同地區的辭書與	guan fang	官方
+這是因為 OpenCC 長期參考不同地區的辭書與官方標準，以決定特定模式下更適合	shi yong	使用
+這是因為 OpenCC 長期參考不同地區的辭書與官方標準，以決定特定模式下更適合使用哪種	zi xing	字形
+* 香港繁體	mo shi	模式
+* 香港繁體模式（`t2hk` / `s2hk`）曾長期遵從香港教育局《香港小學學習字詞表》與《常用字	zi xing	字形
+但兩表	zhong you	中有
+但兩表中有少數用字與香港實際用字習慣有出入，現行用字	yi an	已按
+* 臺灣正體	mo shi	模式
+這些標準與辭書是 OpenCC 進行	gong cheng	工程
+這些標準與辭書是 OpenCC 進行工程判斷時的重要依據，但 OpenCC 本身	shi yi	是一
+這些標準與辭書是 OpenCC 進行工程判斷時的重要依據，但 OpenCC 本身是一個轉換	gong ju	工具
+這些標準與辭書是 OpenCC 進行工程判斷時的重要依據，但 OpenCC 本身是一個轉換工具，而不是	zhao ban	照搬
+具體條	mu di	目的
+具體條目的取捨仍需同時考慮轉換準確性、歧義風險、資料維護成本，	yi ji	以及
+具體條目的取捨仍需同時考慮轉換準確性、歧義風險、資料維護成本，以及	ji you	既有
+具體條目的取捨仍需同時考慮轉換準確性、歧義風險、資料維護成本，以及既有	shi yong zhe	使用者
+實際使用習慣與	guan fang	官方
+若直接為	mei yi	每一
+若直接為每一對語言/地區變體	jian li	建立
+若直接為每一對語言/地區變體建立獨立轉換規則，複雜度將隨	mo shi	模式
+若直接為每一對語言/地區變體建立獨立轉換規則，複雜度將隨模式數量	ping fang	平方
+若未來要支持如下	mo shi	模式
+採用中間標準層後，可將	liu cheng	流程
+* `tw2sp` ≈ 臺灣地區層	fan xiang	反向
+* `tw2sp` ≈ 臺灣地區層反向（慣用詞與	zi xing	字形
+這裡的「≈」	biao shi	表示
+實際配置文件與詞典組織	fang shi	方式
+的模式不是在完整轉換後	zai zuo	再做
+的模式不是在完整轉換後再做	zheng ju	整句
+的模式不是在完整轉換後再做整句改寫，而是在地區層中額	wai jia	外加
+* s2twp 才會在 s2tw 基礎上	zeng jia	增加
+## 詞典檔案的分工與轉換	liu cheng	流程
+OpenCC 的中文簡繁與地區轉換詞典依職責	da zhi	大致
+OpenCC 的中文簡繁與地區轉換詞典依職責大致分為三類，	ge zi	各自
+OpenCC 的中文簡繁與地區轉換詞典依職責大致分為三類，各自對應轉換	liu cheng	流程
+OpenCC 的中文簡繁與地區轉換詞典依職責大致分為三類，各自對應轉換流程	zhong de	中的
+OpenCC 的中文簡繁與地區轉換詞典依職責大致分為三類，各自對應轉換流程中的	bu tong	不同
+各地區繁體之間的**	zi xing	字形
+各地區繁體之間的**字形**差異，即	tong yi	同一
+各地區繁體之間的**字形**差異，即同一個詞在不同地區	shi yong	使用
+各地區繁體之間的**字形**差異，即同一個詞在不同地區使用	bu tong	不同
+各地區繁體之間的**字形**差異，即同一個詞在不同地區使用不同	zi xing	字形
+`TWPhrases.txt` 及其反向表 `TWPhrasesRev.txt`，負責地區之間	shi yong	使用
+詞彙**表達	tong yi	同一
+詞彙**表達同一概念的情況，	li ru	例如
+這類條目應與地區	zi xing	字形
+若只是	tong yi	同一
+若只是同一詞彙在不同地區採用不同	zi xing	字形
+若是不同地區用不同詞彙表達	tong yi	同一
+若是不同地區用不同詞彙表達同一	gai nian	概念
+詞典，`group.dicts` 中越靠前的詞典優先級	yue gao	越高
+`s2twp` 則同時	shi yong	使用
+`s2twp` 則同時使用地區慣用詞層與地區	zi xing	字形
+OpenCC 是為電腦處理中文文本服務的轉換	gong ju	工具
+OpenCC 是為電腦處理中文文本服務的轉換工具，	yin ci	因此
+OpenCC 是為電腦處理中文文本服務的轉換工具，因此詞典收錄	bu yi	不以
+OpenCC 是為電腦處理中文文本服務的轉換工具，因此詞典收錄不以某一套紙面規範為	wei yi	唯一
+只要條目有	he li	合理
+只要條目有合理依據、	fu he	符合
+只要條目有合理依據、符合對應	mo shi	模式
+只要條目有合理依據、符合對應模式	ding wei	定位
+同時，繁簡字詞對照表	bu shi	不是
+新增或調整條目時，應優先依據可查證的語料、辭書、	guan fang	官方
+新增或調整條目時，應優先依據可查證的語料、辭書、官方標準或	ji you	既有
+新增或調整條目時，應優先依據可查證的語料、辭書、官方標準或既有約定俗成寫法，而不是僅憑	bu jian	部件
+轉換輸	chu de	出的
+轉換輸出的	zi xing	字形
+轉換輸出的字形也應以主流平台	tong chang	通常
+轉換輸出的字形也應以主流平台通常可以正常顯示為重要標準，避免把	shi yong zhe	使用者
+* 必須有足夠依據證明該寫法實際存在，	huo zai	或在
+* 必須有足夠依據證明該寫法實際存在，或在電腦處理場景	zhong you	中有
+* 必須有足夠依據證明該寫法實際存在，或在電腦處理場景中有明確	yong tu	用途
+* 必須符合對應	mo shi	模式
+* 必須符合對應模式的標準層	ding wei	定位
+* 必須符合對應模式的標準層定位，	li ru	例如
+* 必須符合對應模式的標準層定位，例如 `STCharacters.txt` 處理	de shi	的是
+* 必須符合對應模式的標準層定位，例如 `STCharacters.txt` 處理的是「簡體」到「OpenCC 標準繁體」，地區異體應	jiao you	交由
+* 轉換輸出應優先選擇主流平台	tong chang	通常
+* 轉換輸出應優先選擇主流平台通常可以正常顯示、輸入、檢索和後續處理	de zi	的字
+* 詞組通常	zhi shou	只收
+* 詞組通常只收錄最常用、最符合目標	mo shi	模式
+* 不應收錄會	yin ru	引入
+* 不應收錄會引入高風險歧義、降低候選質量，	huo zai	或在
+* 不應收錄會引入高風險歧義、降低候選質量，或在人工選詞場景中	zao cheng	造成
+* 不應收錄會引入高風險歧義、降低候選質量，或在人工選詞場景中造成	da liang	大量
+* 不應僅因某個	zi xing	字形
+* 不應僅因某個字形可以由	bu jian	部件
+* 不應僅因某個字形可以由部件類推、Unicode 關聯、或歷史異體關係解釋為繁簡關係，就自動	jia ru	加入
+* 對既有轉換結果有影響的改動應從嚴處理，優先保證現有轉換的穩	ding xing	定性
+實務上，OpenCC 	zhi yuan	支援
+實務上，OpenCC 支援	de zi	的字
+超出這些區段	de zi	的字
+超出這些區段的字元不會僅因位於較高 Unicode plane 	er bei	而被
+超出這些區段的字元不會僅因位於較高 Unicode plane 而被	pai chu	排除
+若能提出明確的實際	shi yong	使用
+若能提出明確的實際使用證據，且在主流平台上	tong chang	通常
+但不以窮盡所有理論上可能的	zi xing	字形
+若某個候選	zhu yao	主要
+若某個候選主要屬於臺灣、香港、日本	xin zi	新字
+若某個候選主要屬於臺灣、香港、日本新字體或其他特定地區/系統，應放入相應	mo shi	模式
+若某個候選主要屬於臺灣、香港、日本新字體或其他特定地區/系統，應放入相應模式或	ling jian	另建
+當某個字或詞存在歧義，而無法	ke kao	可靠
+當某個字或詞存在歧義，而無法可靠判定語義時，OpenCC 傾向於	bao chi	保持
+* 但已發	sheng de	生的
+* 但已發生的轉換	tong chang	通常
+* 但已發生的轉換通常	ju you	具有
+這一策略可能導致	bu fen	部分
+這一策略可能導致部分	shi yong zhe	使用者
+這一策略可能導致部分使用者認為「轉換不完整」，	dan qi	但其
+這一策略可能導致部分使用者認為「轉換不完整」，但其	mu di	目的
+這一策略可能導致部分使用者認為「轉換不完整」，但其目的在於降低錯誤轉換的概率，避免因誤判語義而產生更嚴	zhong de	重的
+各轉換	mo shi	模式
+各轉換模式都有名義	shang de	上的
+各轉換模式都有名義上的輸入範圍，	li ru	例如
+各轉換模式都有名義上的輸入範圍，例如 `t2s` 在設計上處理	de shi	的是
+但在實務上，真實文本	wei bi	未必
+但在實務上，真實文本未必嚴格	fu he	符合
+但在實務上，真實文本未必嚴格符合 OpenCC 標準繁體，	yin ci	因此
+收錄部分非 OpenCC 標準繁體的常見輸入	xing shi	形式
+地區繁體或歷史異體都應	zhi jie	直接
+* 多個來源	xing shi	形式
+* 多個來源形式可能被歸	yi dao	一到
+* 多個來源形式可能被歸一到	tong yi	同一
+* 多個來源形式可能被歸一到同一 OpenCC 標準	xing shi	形式
+* 地區標準轉換本身可能進	yi bu	一步
+* 地區標準轉換本身可能進一步合併	xing shi	形式
+在中間步驟中，原始信息可能	yi bu	已不
+關於 OpenCC 標準繁體、演算法，與相關轉換原則，曾在多個 issue 與 pull request 中反覆討論，	li ru	例如
+- [#1038](https://github.com/BYVoid/OpenCC/pull/1038)：以 `背` / `揹` 為例，討論 OpenCC 標準繁體	ru he	如何
+- [#1038](https://github.com/BYVoid/OpenCC/pull/1038)：以 `背` / `揹` 為例，討論 OpenCC 標準繁體如何在常見用法、	guan fang	官方
+OpenCC 基本上仍以臺灣	guan fang	官方
+OpenCC 基本上仍以臺灣官方用字為重要參考，	yin ci	因此
+OpenCC 基本上仍以臺灣官方用字為重要參考，因此	shi yong	使用
+OpenCC 基本上仍以臺灣官方用字為重要參考，因此使用 `臺灣` 等形式，但標準繁體層的目標是盡可能選擇較正確或語義上較適當	de zi	的字
+OpenCC 基本上仍以臺灣官方用字為重要參考，因此使用 `臺灣` 等形式，但標準繁體層的目標是盡可能選擇較正確或語義上較適當的字詞，	yi bian	以便
+OpenCC 基本上仍以臺灣官方用字為重要參考，因此使用 `臺灣` 等形式，但標準繁體層的目標是盡可能選擇較正確或語義上較適當的字詞，以便後續轉換能更好地區分	bu tong	不同
+- [#475](https://github.com/BYVoid/OpenCC/issues/475)：討論分詞與多階段轉換順序	ru he	如何
+- [#434](https://github.com/BYVoid/OpenCC/issues/434)：討論簡體側候選收錄的實用性與異體字原則，需綜合考量是否見於《通用規範漢字表》等現代大陸標準、實際	shi yong lv	使用率
+- [#434](https://github.com/BYVoid/OpenCC/issues/434)：討論簡體側候選收錄的實用性與異體字原則，需綜合考量是否見於《通用規範漢字表》等現代大陸標準、實際使用率，	yi ji	以及
+- [#434](https://github.com/BYVoid/OpenCC/issues/434)：討論簡體側候選收錄的實用性與異體字原則，需綜合考量是否見於《通用規範漢字表》等現代大陸標準、實際使用率，以及是否	zhi shi	只是
+- [#434](https://github.com/BYVoid/OpenCC/issues/434)：討論簡體側候選收錄的實用性與異體字原則，需綜合考量是否見於《通用規範漢字表》等現代大陸標準、實際使用率，以及是否只是異體字或	zi xing	字形
+例如不宜把幾乎不出現在大陸文本中的 `馀` 輕易列為候選，也不宜僅因 `㓰` 	zi xing	字形
+例如不宜把幾乎不出現在大陸文本中的 `馀` 輕易列為候選，也不宜僅因 `㓰` 字形可聯	xiang dao	想到
+- [#418](https://github.com/BYVoid/OpenCC/pull/418)：修正香港模式中與實際用字習慣	bu fu	不符
+- [#418](https://github.com/BYVoid/OpenCC/pull/418)：修正香港模式中與實際用字習慣不符	de zi	的字
+- [#418](https://github.com/BYVoid/OpenCC/pull/418)：修正香港模式中與實際用字習慣不符的字形，並說明《香港小學學習字詞表》與《常用字	zi xing	字形
+- [#418](https://github.com/BYVoid/OpenCC/pull/418)：修正香港模式中與實際用字習慣不符的字形，並說明《香港小學學習字詞表》與《常用字字形表》	bu yi	不宜
+- [#418](https://github.com/BYVoid/OpenCC/pull/418)：修正香港模式中與實際用字習慣不符的字形，並說明《香港小學學習字詞表》與《常用字字形表》不宜被機械	zhao ban	照搬
+本文檔用於統一說明設計原則，	yi bian	以便
+候选词动作扩展插件,为Rime输入法提供候选词动作类型识别和	ti qu	提取
+候选词动作扩展插件,为Rime输入法提供候选词动作类型识别和提取功能,支持文本、图片、	yin yue	音乐
+候选词动作扩展插件,为Rime输入法提供候选词动作类型识别和提取功能,支持文本、图片、音乐、	tian qi	天气
+- **策略模式 (Strategy Pattern)**: 	mei ge	每个
+- **策略模式 (Strategy Pattern)**: 每个提取器	fu ze	负责
+- **责任链	mo shi	模式
+- **责任链模式 (Chain of Responsibility)**: 	gong chang	工厂
+- **责任链模式 (Chain of Responsibility)**: 工厂按顺序	chang shi	尝试
+- **责任链模式 (Chain of Responsibility)**: 工厂按顺序尝试提取器,	zhi dao	直到
+- **责任链模式 (Chain of Responsibility)**: 工厂按顺序尝试提取器,直到	zhao dao	找到
+动作类型	shi yong	使用
+动作类型使用 `std::string` 类型，	zhi chi	支持
+动作类型使用 `std::string` 类型，支持	ren yi	任意
+动作类型使用 `std::string` 类型，支持任意自定义类型，	fang bian	方便
+| 自定义类型 | 可以使用任何字符串	zuo wei	作为
+插件会自动被librime的构建系统	bao han	包含
+- ✅ **易于扩展** - 	zhi chi	支持
+- ✅ **类型安全** - 	shi yong	使用
+- ✅ **类型安全** - 使用字符串类型	zhi chi	支持
+- ✅ **类型安全** - 使用字符串类型支持	ren yi	任意
+- ✅ **向后兼容** - 不影响	xian you	现有
+本目录	bao han	包含
+本目录包含 TxEngine 拼音	fan cha	反查
+本目录包含 TxEngine 拼音反查功能的完整文档，包括使用说明、实现细节、流程图和代码修改	qing dan	清单
+### 1. [反查功能使用说明.md](./	fan cha	反查
+**适合人群**: 	shi yong zhe	使用者
+### 2. [反查功能实现说明.md](./	fan cha	反查
+### 3. [反查功能总结.md](./	fan cha	反查
+### 4. [反查功能快速参考.md](./	fan cha	反查
+### 5. [反查功能流程图.md](./	fan cha	反查
+### 6. [代码修改	qing dan	清单
+### 6. [代码修改清单.md](./代码修改	qing dan	清单
+👉 阅读 [反查功能快速参考.md](./	fan cha	反查
+👉 阅读 [反查功能使用说明.md](./	fan cha	反查
+👉 阅读 [反查功能实现说明.md](./	fan cha	反查
+👉 阅读 [反查功能流程图.md](./	fan cha	反查
+👉 阅读 [代码修改	qing dan	清单
+👉 阅读 [代码修改清单.md](./代码修改	qing dan	清单
+👉 阅读 [反查功能总结.md](./	fan cha	反查
+1. [反查功能快速参考.md](./	fan cha	反查
+2. [反查功能使用说明.md](./	fan cha	反查
+1. [反查功能实现说明.md](./	fan cha	反查
+2. [反查功能流程图.md](./	fan cha	反查
+2. [反查功能流程图.md](./反查功能流程图.md) - 架构	li jie	理解
+3. [反查功能快速参考.md](./	fan cha	反查
+3. [反查功能快速参考.md](./反查功能快速参考.md) - 	tiao shi	调试
+1. [反查功能流程图.md](./	fan cha	反查
+2. [反查功能总结.md](./	fan cha	反查
+3. [反查功能使用说明.md](./	fan cha	反查
+3. [反查功能使用说明.md](./反查功能使用说明.md) - API 	she ji	设计
+1. [代码修改	qing dan	清单
+1. [代码修改清单.md](./代码修改	qing dan	清单
+2. [反查功能实现说明.md](./	fan cha	反查
+2. [反查功能实现说明.md](./反查功能实现说明.md) - 	shi xian	实现
+2. [反查功能实现说明.md](./反查功能实现说明.md) - 实现	yan zheng	验证
+3. [反查功能总结.md](./	fan cha	反查
+1. [反查功能总结.md](./	fan cha	反查
+1. [反查功能总结.md](./反查功能总结.md) - 	xiang mu	项目
+1. [反查功能总结.md](./反查功能总结.md) - 项目	zong lan	总览
+2. [代码修改	qing dan	清单
+2. [代码修改清单.md](./代码修改	qing dan	清单
+2. [代码修改清单.md](./代码修改清单.md) - 工作量	ping gu	评估
+3. [反查功能快速参考.md](./	fan cha	反查
+- 使用说明: [	fan cha	反查
+- 使用说明: [反查功能使用说明.md](./	fan cha	反查
+- 流程图: [	fan cha	反查
+- 流程图: [反查功能流程图.md](./	fan cha	反查
+- 流程图: [反查功能流程图.md](./反查功能流程图.md) § 字典	cha xun	查询
+- 使用说明: [	fan cha	反查
+- 使用说明: [反查功能使用说明.md](./	fan cha	反查
+- 实现: [反查功能实现说明.md](./	fan cha	反查
+- 实现: [反查功能实现说明.md](./反查功能实现说明.md) § 初始化	fan cha	反查
+- 实现: [反查功能实现说明.md](./	fan cha	反查
+- 实现: [反查功能实现说明.md](./反查功能实现说明.md) § 	tian jia	添加
+- 流程图: [	fan cha	反查
+- 流程图: [反查功能流程图.md](./	fan cha	反查
+- 流程图: [反查功能流程图.md](./反查功能流程图.md) § UTF-8 字符处理	xiang jie	详解
+- 总结: [反查功能总结.md](./	fan cha	反查
+- 使用说明: [	fan cha	反查
+- 使用说明: [反查功能使用说明.md](./	fan cha	反查
+- 使用说明: [反查功能使用说明.md](./反查功能使用说明.md) § 	duo zi	多字
+- 使用说明: [反查功能使用说明.md](./反查功能使用说明.md) § 多字	cha xun	查询
+- 实现: [反查功能实现说明.md](./	fan cha	反查
+- 实现: [反查功能实现说明.md](./反查功能实现说明.md) § 	shi xian	实现
+- 实现: [反查功能实现说明.md](./反查功能实现说明.md) § 实现 ReverseLookup 	han shu	函数
+- 总结: [反查功能总结.md](./	fan cha	反查
+- 总结: [反查功能总结.md](./反查功能总结.md) § 	zhu zi	逐字
+- 总结: [反查功能总结.md](./反查功能总结.md) § 逐字	fan cha	反查
+- 使用说明: [	fan cha	反查
+- 使用说明: [反查功能使用说明.md](./	fan cha	反查
+- 实现: [反查功能实现说明.md](./	fan cha	反查
+- 快速参考: [	fan cha	反查
+- 快速参考: [反查功能快速参考.md](./	fan cha	反查
+- 快速参考: [反查功能快速参考.md](./反查功能快速参考.md) § 	pei zhi	配置
+- 快速参考: [	fan cha	反查
+- 快速参考: [反查功能快速参考.md](./	fan cha	反查
+- 流程图: [	fan cha	反查
+- 流程图: [反查功能流程图.md](./	fan cha	反查
+- 流程图: [反查功能流程图.md](./反查功能流程图.md) § 错误处理	liu cheng	流程
+- 总结: [反查功能总结.md](./	fan cha	反查
+| 如何使用	fan cha	反查
+| 如何使用反查功能? | 	fan cha	反查
+| 如何使用反查功能? | 反查功能快速参考.md | 快速	shi yong	使用
+| 为什么要	zhu zi	逐字
+| 为什么要逐字	cha xun	查询
+| 为什么要逐字查询? | 	fan cha	反查
+| 为什么要逐字查询? | 反查功能使用说明.md | 	duo zi	多字
+| 为什么要逐字查询? | 反查功能使用说明.md | 多字	cha xun	查询
+| 如何配置字典? | 	fan cha	反查
+| UTF-8 如何处理? | 	fan cha	反查
+| UTF-8 如何处理? | 反查功能流程图.md | UTF-8 字符处理	xiang jie	详解
+| 反查失败怎么办? | 	fan cha	反查
+| 性能如何	you hua	优化
+| 性能如何优化? | 	fan cha	反查
+| 修改了哪些文件? | 代码修改	qing dan	清单
+| 如何调试? | 	fan cha	反查
+如有问题、	jian yi	建议
+本文档集提供了 TxEngine 拼音	fan cha	反查
+无论您是	shi yong zhe	使用者
+无论您是使用者、开发者、架构师	hai shi	还是
+无论您是使用者、开发者、架构师还是代码审查者，都能在这里	zhao dao	找到
+无论您是使用者、开发者、架构师还是代码审查者，都能在这里找到	suo xu	所需
+无论您是使用者、开发者、架构师还是代码审查者，都能在这里找到所需的	xin xi	信息
+Octagram是RIME（中州韵输入法	yin qing	引擎
+Octagram是RIME（中州韵输入法引擎）的一个语法检查	cha jian	插件
+Octagram是RIME（中州韵输入法引擎）的一个语法检查插件，	ji yu	基于
+Octagram是RIME（中州韵输入法引擎）的一个语法检查插件，基于n-gram语言模型	shi xian	实现
+Octagram是RIME（中州韵输入法引擎）的一个语法检查插件，基于n-gram语言模型实现，	yong yu	用于
+本文档详细分析Octagram	cha jian	插件
+本文档详细分析Octagram插件的实现原理、数据结构和算法	liu cheng	流程
+- 基于n-gram模型分析词语搭配	guan xi	关系
+- 支持多种配置参数调整语言模型	xing wei	行为
+- 提供构建	yu fa	语法
+- 提供构建语法数据库的	gong ju	工具
+名称"Octagram"暗示它支持的是最多8元语法	mo xing	模型
+名称"Octagram"暗示它支持的是最多8元语法模型，实际上默认配置	shi yong de	使用的
+名称"Octagram"暗示它支持的是最多8元语法模型，实际上默认配置使用的是4-gram	mo xing	模型
+GramDb使用Double-Array Trie (DAT)数据结构存储n-gram	shu ju	数据
+GramDb使用Double-Array Trie (DAT)数据结构存储n-gram数据，	ju you	具有
+GramDb使用Double-Array Trie (DAT)数据结构存储n-gram数据，具有	gao xiao de	高效的
+它将数据映射到文件中，	shi yong	使用
+它将数据映射到文件中，使用MappedFile	zuo wei	作为
+它将数据映射到文件中，使用MappedFile作为	ji lei	基类
+Octagram是Grammar接口的	shi xian	实现
+这些参数定义了	ru he	如何
+这些参数定义了如何	dui bu	对不
+这些参数定义了如何对不同类型的词语搭配	jin xing	进行
+这些参数定义了如何对不同类型的词语搭配进行评分，从而	ying xiang	影响
+为了高效处理	han zi	汉字
+为了高效处理汉字等Unicode	zi fu	字符
+这些函数	yong yu	用于
+这些函数用于在UTF-8编码	de zi	的字
+这些函数用于在UTF-8编码的字符串中精确定位Unicode字符位置，确保多字节	zi fu	字符
+Query函数是n-gram语言模型的核心	shi xian	实现
+Query函数是n-gram语言模型的核心实现，	fu ze	负责
+Query函数是n-gram语言模型的核心实现，负责	ji suan	计算
+如果数据库未加载或上下文	wei kong	为空
+如果数据库未加载或上下文为空，直接返回非搭配	cheng fa	惩罚
+1. 确定n-gram中n的值（默认为4-1=3，	biao shi	表示
+1. 确定n-gram中n的值（默认为4-1=3，表示	shi yong	使用
+1. 确定n-gram中n的值（默认为4-1=3，表示使用	zui jin	最近
+1. 确定n-gram中n的值（默认为4-1=3，表示使用最近3个字符	zuo wei	作为
+2. 从上下文中	ti qu	提取
+2. 从上下文中提取	zui hou	最后
+2. 从上下文中提取最后n个字符（n-gram	zhong de	中的
+2. 从上下文中提取最后n个字符（n-gram中的"	li shi	历史
+2. 从上下文中提取最后n个字符（n-gram中的"历史"	bu fen	部分
+3. 从候选词中	ti qu	提取
+3. 从候选词中提取前n个字符（避免	guo chang	过长
+3. 从候选词中提取前n个字符（避免过长词造成的	ji suan	计算
+4. 将Unicode字符编码为系统内部	ge shi	格式
+这个循环是算法	he xin	核心
+1. 先用完整上下文	cha xun	查询
+1. 先用完整上下文查询（	li ru	例如
+1. 先用完整上下文查询（例如用"我喜欢吃"	cha xun	查询
+1. 先用完整上下文查询（例如用"我喜欢吃"查询"	ping guo	苹果
+2. 若无匹配或需要更多匹配，缩短上下文（用"喜欢吃"	cha xun	查询
+2. 若无匹配或需要更多匹配，缩短上下文（用"喜欢吃"查询"	ping guo	苹果
+3. 继续缩短	zhi dao	直到
+3. 继续缩短直到	dan zi	单字
+3. 继续缩短直到单字或	wu zi	无字
+3. 继续缩短直到单字或无字（用"吃"	cha xun	查询
+3. 继续缩短直到单字或无字（用"吃"查询"	ping guo	苹果
+1. 计算匹配长度（	ming zhong	命中
+3. 根据搭配长度决定	shi yong	使用
+3. 根据搭配长度决定使用强搭配	cheng fa	惩罚
+3. 根据搭配长度决定使用强搭配惩罚	hai shi	还是
+3. 根据搭配长度决定使用强搭配惩罚还是弱搭配	cheng fa	惩罚
+2. 查询该词	zuo wei	作为
+2. 查询该词作为	ju wei	句尾
+2. 查询该词作为句尾	shi de	时的
+使用Double-Array Trie进行	gao xiao	高效
+使用Double-Array Trie进行高效前缀匹配	cha xun	查询
+1. 从标准输入读取键值对	shu ju	数据
+1. 从标准输入读取键值对数据（格式为"	ci zu	词组
+1. 从标准输入读取键值对数据（格式为"词组 	quan zhong	权重
+Query函数本质上是计算条件概率P(word|context)，即给定上下文后	ci yu	词语
+1. **完整使用上下文**：	ji suan	计算
+2. **回退策略**：	ru guo	如果
+2. **回退策略**：如果数据不足，	ji suan	计算
+2. **回退策略**：如果数据不足，计算P(word|context的	bu fen	部分
+3. **兜底措施**：如果没有	ren he	任何
+3. **兜底措施**：如果没有任何搭配	xin xi	信息
+3. **兜底措施**：如果没有任何搭配信息，	shi yong	使用
+4. **特殊情况**：	ju wei	句尾
+4. **特殊情况**：句尾	wei zhi	位置
+4. **特殊情况**：句尾位置时考虑词作为	ju wei	句尾
+惩罚系数（penalties）	tong guo	通过
+惩罚系数（penalties）通过对数	fang shi	方式
+惩罚系数（penalties）通过对数方式	ti xian	体现
+惩罚系数（penalties）通过对数方式体现概率，	li ru	例如
+系统通过调整这些	xi shu	系数
+系统通过调整这些系数	kong zhi	控制
+系统通过调整这些系数控制不同类型搭配的偏好	cheng du	程度
+- OctagramComponent加载对应语言的	yu fa	语法
+- Octagram读取配置参数，如搭配长度、	cheng fa	惩罚
+- Octagram读取配置参数，如搭配长度、惩罚	xi shu	系数
+- 输入法	yin qing	引擎
+- Octagram::Query计算候选词在当前上下文	xia de	下的
+- Octagram::Query计算候选词在当前上下文下的适合度	fen shu	分数
+- 将分数	fan hui	返回
+- 将分数返回给输入法	yin qing	引擎
+- 将分数返回给输入法引擎	yong yu	用于
+- 应用不同的	cheng fa	惩罚
+- 应用不同的惩罚	xi shu	系数
+- 应用不同的惩罚系数	ji suan	计算
+1. **Unicode处理**：专门处理中文等多	zi jie	字节
+1. **Unicode处理**：专门处理中文等多字节	zi fu	字符
+2. **高效查询**：	shi yong	使用
+2. **高效查询**：使用Double-Array Trie实现快速前缀	cha xun	查询
+3. **递进式搜索**：从	zui chang	最长
+3. **递进式搜索**：从最长上下文	kai shi	开始
+3. **递进式搜索**：从最长上下文开始，	zhu jian	逐渐
+4. **内存映射**：	shi yong	使用
+4. **内存映射**：使用MappedFile加载数据库，避免	da liang	大量
+4. **内存映射**：使用MappedFile加载数据库，避免大量内存	fu zhi	复制
+这样的	shi xian	实现
+这样的实现使Octagram	cha jian	插件
+这样的实现使Octagram插件能够在输入法	shi shi	实时
+Octagram作为RIME输入法的	yu fa	语法
+Octagram作为RIME输入法的语法	cha jian	插件
+Octagram作为RIME输入法的语法插件，	ji yu	基于
+Octagram作为RIME输入法的语法插件，基于n-gram语言模型实现了	gao xiao de	高效的
+它通过分析历史输入和候选词之间的概率	guan xi	关系
+它通过分析历史输入和候选词之间的概率关系，	bang zhu	帮助
+它通过分析历史输入和候选词之间的概率关系，帮助输入法提供更符合自然语言	xi guan	习惯
+其实现充分考虑了性能、准确性和灵活性，	shi qi	使其
+地區詞詞表用於處理	bu tong	不同
+地區詞詞表用於處理不同中文地區之間穩定存在、廣泛	shi yong	使用
+OpenCC 的目標是	ti sheng	提升
+OpenCC 的目標是提升跨地區文本轉換的可讀性與自然度，	er fei	而非
+OpenCC 的目標是提升跨地區文本轉換的可讀性與自然度，而非進行語言規範化、風格統一、價值判斷或語言	zheng ce	政策
+詞表應儘量	bao chi	保持
+本文主要適用於地區慣用詞詞表，	li ru	例如
+`STPhrases.txt` 則是簡體到 OpenCC 標準繁體的詞組表，必要時會影響地區詞轉換	qian de	前的
+此類詞表應遵循 [OpenCC 設計	si xiang	思想
+例如，`TWVariantsPhrases.txt`、`HKVariantsPhrases.txt` 用於異體字詞組級例外，不應用來收錄	yi ban de	一般地
+* 阿拉伯聯合	da gong	大公
+* 阿拉伯聯合大公國 ↔ 阿拉伯	lian he	联合
+對於專	you ming	有名
+對於專有名詞，應以實際	shi yong	使用
+對於專有名詞，應以實際使用情況為準，	er fei	而非
+對於專有名詞，應以實際使用情況為準，而非	zi mian	字面
+### 2. 避免收錄動詞、	xing rong	形容
+* 透過 ↔ 通过（	ge di	各地
+* 透過 ↔ 通过（各地	dou you	都有
+* 透過 ↔ 通过（各地都有	shi yong	使用
+* 透過 ↔ 通过（各地都有使用，且含義	bu tong	不同
+* 厲害 ↔ 犀利（	ge di	各地
+* 厲害 ↔ 犀利（各地	dou you	都有
+* 厲害 ↔ 犀利（各地都有	shi yong	使用
+* 厲害 ↔ 犀利（各地都有使用，且含義	bu tong	不同
+此類詞彙	tong chang	通常
+此類詞彙通常	ju you	具有
+此類詞彙通常具有語義差異、搭配	xian zhi	限制
+此類詞彙通常具有語義差異、搭配限制或風格色彩，	rong yi	容易
+此類問題	tong chang	通常
+粵語、閩南語、	ke jia	客家
+粵語、閩南語、客家話等	fang yan	方言
+粵語、閩南語、客家話等方言詞原則	shang bu	上不
+例外情況是該詞已進	ru mu	入目
+例外情況是該詞已進入目標地區	zhu liu	主流
+例外情況是該詞已進入目標地區主流標準書面中文，成為穩	ding de	定的
+此時可視實際	shi yong	使用
+僅存在於	fang yan	方言
+僅存在於方言語境，	er wei	而未
+僅存在於方言語境，而未進入當	di zhu	地主
+僅存在於方言語境，而未進入當地主流標準書面中文體系的詞彙，	tong chang	通常
+僅存在於方言語境，而未進入當地主流標準書面中文體系的詞彙，通常	bu shou	不收
+此類詞彙屬於「	fang yan	方言
+對於公司、產品、軟體、品牌等專	you ming	有名
+對於公司、產品、軟體、品牌等專有名詞，應優先採用目標地區實際	zhu liu	主流
+官方譯名	ke zuo	可作
+官方譯名可作為參考，但不是	wei yi	唯一
+官方譯名與實際使用形式不一致時，	ke yi	可依
+官方譯名與實際使用形式不一致時，可依據實際	shi yong	使用
+專有名詞應	ju you	具有
+OpenCC 並非百科全書，	bu yi	不以
+新增條目應具有一定的實際	shi yong	使用
+* 出現在權威官方文件、	jiao cai	教材
+* 在相關領域	ju you	具有
+* 地區差異明確	dan shi	但使
+* 地區差異明確但使用規模極	xiao de	小的
+* 地區差異明確但使用規模極小的專	you ming	有名
+### 8. 應具有明確且穩	ding de	定的
+* 一詞多義且無法	ke kao	可靠
+地區詞轉換的目標是	ti sheng	提升
+地區詞轉換的目標是提升實際轉換	xiao guo	效果
+地區詞轉換的目標是提升實際轉換效果，	er fei	而非
+地區詞轉換的目標是提升實際轉換效果，而非	jian li	建立
+地區詞轉換的目標是提升實際轉換效果，而非建立	wan quan	完全
+地區詞轉換的目標是提升實際轉換效果，而非建立完全可逆的	ying she	映射
+若某詞	zai yi	在一
+若某詞在一個	fang xiang	方向
+若某詞在一個方向	ju you	具有
+若某詞在一個方向具有穩定對應關係，而另一	fang xiang	方向
+* 通道 ← 信道（	fan xiang	反向
+* 雪梨 ← 悉尼（	fan xiang	反向
+* 預設 ← 缺省（	fan xiang	反向
+* 預設 ← 缺省（反向可能對應「	mo ren	默认
+* 預設 ← 缺省（反向可能對應「默认」、「	yu she	预设
+是否建立	fan xiang	反向
+是否建立反向規則，應以實際使用需求及誤轉換風險為依據，	er fei	而非
+不得系統性	zhao ban	照搬
+* 在授權	xiang rong	相容
+* 在授權相容且逐條審閱的前提下，	shi yong	使用
+* 在授權相容且逐條審閱的前提下，使用	zheng fu	政府
+* 在授權相容且逐條審閱的前提下，使用政府開放資料、	gong you	公有
+* 參考其他專案	zhong de	中的
+* 未經審閱即批量匯入、整體	yi zhi	移植
+提交地區詞條時，應在 issue、pull request 或 commit 說明中提供	zu yi	足以
+提交地區詞條時，應在 issue、pull request 或 commit 說明中提供足以	zhi chi	支持
+* 目標地區	zhu liu	主流
+* 目標地區主流媒體、權威官方文件、	jiao cai	教材
+* 對可能歧義、誤轉換或	fan xiang	反向
+對於專	you ming	有名
+對於專有名詞，應盡量說明	qi zai	其在
+對於專有名詞，應盡量說明其在目標地區的實際	shi yong	使用
+對於專有名詞，應盡量說明其在目標地區的實際使用情況，	er bu	而不
+若條目存在爭議，證據	yao qiu	要求
+新增或調	zheng di	整地
+新增或調整地區詞條時，應在實際	shi yong	使用
+新增或調整地區詞條時，應在實際使用該詞表的配置中	zeng jia	增加
+新增或調整地區詞條時，應在實際使用該詞表的配置中增加測試，以方便審閱新增規則對	bu tong	不同
+新增或調整地區詞條時，應在實際使用該詞表的配置中增加測試，以方便審閱新增規則對不同轉換	mo shi	模式
+* 臺灣地區慣用詞	tong chang	通常
+* 僅影響	zi xing	字形
+* 僅影響字形或異體	zi de	字的
+* 若需要讓簡體輸入	zai di	在地
+* 若需要讓簡體輸入在地區詞階段保持完整匹配，可能還需要在 `STPhrases.txt` 	zeng jia	增加
+* 如有可用的	sheng cheng	生成
+* 如有可用的生成腳本，	ke shi yong	可使用
+* 如有可用的生成腳本，可使用腳本	sheng cheng	生成
+* 如有可用的生成腳本，可使用腳本生成測試	yong li	用例
+詞典文件仍須	bao chi	保持
+詞典文件仍須保持排序、	qu chong	去重
+詞典文件仍須保持排序、去重，並	fu he	符合
+詞典文件仍須保持排序、去重，並符合各詞表的正反向維護	yao qiu	要求
+單向條目應在測試中明確覆蓋預期轉換	fang xiang	方向
+對於存在明顯爭議、缺乏共識或證據不足的詞條，原則	shang bu	上不
+收錄方應提供	chong fen	充分
+若無法達成	shang shu	上述
+新增詞條不僅	zeng jia	增加
+收錄決策應綜合	heng liang	衡量
+收錄決策應綜合衡量地區差異	cheng du	程度
+收錄決策應綜合衡量地區差異程度、	shi yong	使用
+地區差異明確、	shi yong	使用
+OpenCC 不追求完整覆蓋所有地區用語、專	you ming	有名
+OpenCC 不追求完整覆蓋所有地區用語、專有名詞或	fang yan	方言
+# TX插件功能	qi yong	启用
+# TX插件功能启用	jian cha	检查
+| API函数 | 检查对象 | 	pei zhi	配置
+| API函数 | 检查对象 | 配置	lu jing	路径
+| True | 功能已启用 | 	qi yong	启用
+| True | 功能已启用 | 启用	xiang guan	相关
+| False | 功能未启用或出错 | 	jin yong	禁用
+| False | 功能未启用或出错 | 禁用	xiang guan	相关
+| 性能慢 | 频繁调用 | 	tian jia	添加
+- 📖 **详细使用文档**: `	jian cha	检查
+- 🔧 **实现总结**: `功能启用状态	jian cha	检查
+- 🔧 **实现总结**: `功能启用状态检查API	shi xian	实现
+- 格式: RIME 反查数据库二进制	ge shi	格式
+A: `ReverseDb::Lookup()` 只支持单个字符	cha xun	查询
+A: `ReverseDb::Lookup()` 只支持单个字符查询，	duo zi	多字
+A: 字典会返回所有	du yin	读音
+A: 字典会返回所有读音，用空格	fen ge	分隔
+A: 字典会返回所有读音，用空格分隔，	li ru	例如
+A: 函数返回 false，result 保持不变或	bao han	包含
+A: 函数返回 false，result 保持不变或包含	bu fen	部分
+A: 函数返回 false，result 保持不变或包含部分	jie guo	结果
+A: 每个字符	yi ci	一次
+A: 每个字符一次字典	cha xun	查询
+| 字典未加载 | 	ji lu	记录
+| 字典未加载 | 记录 WARNING，	fan hui	返回
+| 单字反查失败 | 	ji lu	记录
+| 单字反查失败 | 记录 WARNING，保留原	zi fu	字符
+| 单字反查失败 | 记录 WARNING，保留原字符 | 	ji xu	继续
+| 单字反查失败 | 记录 WARNING，保留原字符 | 继续	chu li	处理
+| UTF-8 解析错误 | 	ji lu	记录
+| UTF-8 解析错误 | 记录 WARNING，中断处理 | true (	bu fen	部分
+| UTF-8 解析错误 | 记录 WARNING，中断处理 | true (部分	jie guo	结果
+1. **缓存**: 缓存常用字的	fan cha	反查
+1. **缓存**: 缓存常用字的反查	jie guo	结果
+3. **批量查询**: 	yi ci	一次
+✅ **核心功能**: 将中文文本	fan cha	反查
+✅ **使用简单**: 一个函数调用	ji ke	即可
+文件后缀名代表	de shi	的是
+文件后缀名代表的是	ci dian	词典
+作为最大概率法(MPSegment: Max Probability)分词所使用的	ci dian	词典
+- `词频` 读取后会换算成对数	quan zhong	权重
+- `词性` 以字符串	xing shi	形式
+- `词性` 以字符串形式保存在	ci dian	词典
+- `词性` 以字符串形式保存在词典	jie dian	节点
+- `词性` 以字符串形式保存在词典节点中，库本身不做	mei ju	枚举
+- `词性` 以字符串形式保存在词典节点中，库本身不做枚举	jiao yan	校验
+作为隐式马尔科夫	mo xing	模型
+作为隐式马尔科夫模型(HMMSegment: Hidden Markov Model)分词所使用的	ci dian	词典
+__对于MixSegment(混合MPSegment和HMMSegment	liang zhe	两者
+__对于MixSegment(混合MPSegment和HMMSegment两者)则同时使用	yi shang	以上
+- `1` 列表示只	zhi ding	指定
+- `1` 列表示只指定	ci yu	词语
+- `1` 列表示只指定词语，	shi yong	使用
+- `1` 列表示只指定词语，使用	mo ren	默认
+- `1` 列表示只指定词语，使用默认	quan zhong	权重
+- `1` 列表示只指定词语，使用默认权重，	ci xing	词性
+- `1` 列表示只指定词语，使用默认权重，词性	wei kong	为空
+- 可以通过 `|` 或 `;` 传入	duo ge	多个
+- 不支持	zhu shi	注释
+- 不支持注释	yu fa	语法
+当前默认	quan zhong	权重
+当前默认权重	lai zi	来自
+当前默认权重来自	zhu ci	主词
+当前默认权重来自主词典统计值，默认使用中位数	quan zhong	权重
+在KeywordExtractor中，使用的是经典的TF-IDF算法，	suo yi	所以
+在KeywordExtractor中，使用的是经典的TF-IDF算法，所以需要这么一个	ci dian	词典
+在KeywordExtractor中，使用的是经典的TF-IDF算法，所以需要这么一个词典提供IDF	xin xi	信息
+本次实现为 TxEngine 	tian jia	添加
+本次实现为 TxEngine 添加了完整的拼音	fan cha	反查
+本次实现为 TxEngine 添加了完整的拼音反查功能，	shi yong	使用
+本次实现为 TxEngine 添加了完整的拼音反查功能，使用 `ReverseLookupDictionary` 将中文文本	fan cha	反查
+- 反查数据文件: 根据字典	da xiao	大小
+- 反查数据文件: 根据字典大小，	tong chang	通常
+3. **内存**: 字典	wen jian	文件
+1. 支持多种拼音	ge shi	格式
+1. 支持多种拼音格式（带	sheng diao	声调
+1. 支持多种拼音格式（带声调、	bu dai	不带
+1. 支持多种拼音格式（带声调、不带	sheng diao	声调
+如有问题或建议，请参考	yi xia	以下
+本次修改为 TxEngine 	tian jia	添加
+本次修改为 TxEngine 添加了完整的拼音	fan cha	反查
+功能已完整	shi xian	实现
+功能已完整实现，文档	qi quan	齐全
+功能已完整实现，文档齐全，可以直接	shi yong	使用
+| 候选 | 类型 | 	ci dian	词典
+| 候选 | 类型 | 词典	quan zhong	权重
+| 候选 | 类型 | 词典权重 | 上下文评分 | 	zui zhong	最终
+| 候选 | 类型 | 词典权重 | 上下文评分 | 最终	quan zhong	权重
+**结论**：从权重来看，"庭"（`-6.48`）应该排在"听"（`-24.75`）	qian mian	前面
+**只有同时满足这两个	tiao jian	条件
+- ❌ 但"听"作为 user_phrase 	zu de	组的
+- ❌ 但"听"作为 user_phrase 组的	wei yi	唯一
+- ❌ 但"听"作为 user_phrase 组的唯一	cheng yuan	成员
+- ❌ 但"听"作为 user_phrase 组的唯一成员，	xian bei	先被
+- 不跨组排序（避免打乱	yuan you	原有
+### 方案3：增加用户	ci dian	词典
+### 方案3：增加用户词典的上下文评分	quan zhong	权重
+在 Filter 层进行全局排序，	bu shou	不受
+在 Filter 层进行全局排序，不受分组	xian zhi	限制
+| 方案 | 难度 | 	xiao guo	效果
+| **方案1：添加到用户词典** | 	jian dan	简单
+| **方案2：修改分组	luo ji	逻辑
+| **方案3：增加	cheng fa	惩罚
