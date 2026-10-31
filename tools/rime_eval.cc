@@ -37,6 +37,7 @@ struct Options {
   std::string cases_path;
   std::string out_path;
   std::string schema = "rime_ice_26";
+  std::vector<std::pair<std::string, std::string>> configs;
   int page_size = 32;
   int topk = 32;
   bool contextual_suggestions = true;
@@ -50,6 +51,8 @@ void PrintUsage() {
       "[options]\n"
       "  --schema ID          schema to evaluate (default rime_ice_26)\n"
       "  --out PATH           write per-case results here (default stdout)\n"
+      "  --config KEY=VALUE   extra schema patch, e.g. grammar/component=clmg\n"
+      "                       (repeatable; VALUE is written as raw YAML)\n"
       "  --no-contextual      disable translator/contextual_suggestions\n"
       "  --page-size N        menu page size (default 32)\n"
       "  --topk N             candidates to record per case (default 32)\n"
@@ -101,6 +104,17 @@ bool ParseArgs(int argc, char** argv, Options* opts) {
       if (!v)
         return false;
       opts->schema = v;
+    } else if (arg == "--config") {
+      const char* v = next("--config");
+      if (!v)
+        return false;
+      std::string patch = v;
+      auto eq = patch.find('=');
+      if (eq == std::string::npos || eq == 0) {
+        fprintf(stderr, "malformed --config: %s\n", v);
+        return false;
+      }
+      opts->configs.emplace_back(patch.substr(0, eq), patch.substr(eq + 1));
     } else if (arg == "--no-contextual") {
       opts->contextual_suggestions = false;
     } else if (arg == "--page-size") {
@@ -169,6 +183,9 @@ bool PrepareUserDir(const Options& opts) {
   patch += "  \"translator/max_sentences\": 0\n";
   patch += "  \"grammar/apply_to_sentence\": false\n";
   patch += "  \"menu/page_size\": " + std::to_string(opts.page_size) + "\n";
+  for (const auto& config : opts.configs) {
+    patch += "  \"" + config.first + "\": " + config.second + "\n";
+  }
   if (!WriteFile(fs::path(opts.user_data_dir) / (opts.schema + ".custom.yaml"),
                  patch))
     return false;
