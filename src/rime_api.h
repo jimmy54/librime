@@ -174,6 +174,31 @@ typedef struct rime_candidate_preview_t {
   char* text_after_selection;
 } RimeCandidatePreview;
 
+#define RIME_SWITCH_GROUP_API 1
+
+//! One switch of the active schema, including its current session selection.
+typedef struct rime_switch_group_t {
+  int data_size;
+  //! The option name for a toggle, or the first option name for a radio group.
+  const char* id;
+  //! Optional group-level display text. Null when absent.
+  const char* title;
+  const char* description;
+  //! Configured reset index, or -1 when unspecified.
+  int reset;
+  //! Current state index, or -1 when no radio option is active.
+  int selected_index;
+  size_t state_count;
+  //! Null for toggles. Otherwise contains state_count radio option names.
+  const char* const* option_names;
+  //! Arrays of state_count slots, with null entries for missing labels.
+  const char* const* states;
+  const char* const* abbrev;
+} RimeSwitchGroup;
+
+typedef void (*RimeSwitchGroupReceiver)(void* context,
+                                        const RimeSwitchGroup* group);
+
 /*!
  *  Should be initialized by calling RIME_STRUCT_INIT(Type, var);
  */
@@ -539,6 +564,14 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                                 RimeCandidatePreview* preview);
   //! free a RimeCandidatePreview filled by get_candidate_preview
   Bool (*free_candidate_preview)(RimeCandidatePreview* preview);
+
+  //! Enumerate the effective schema's groups in config order.
+  //! True includes empty lists. False indicates an invalid session or receiver.
+  //! Group data is borrowed for the callback only. The receiver must not
+  //! mutate the session or its configuration while enumeration is in progress.
+  Bool (*get_switch_groups)(RimeSessionId session_id,
+                           RimeSwitchGroupReceiver receiver,
+                           void* context);
 } RIME_FLAVORED(RimeApi);
 
 //! API entry

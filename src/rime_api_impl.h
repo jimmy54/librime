@@ -1249,6 +1249,68 @@ static const char* RimeGetStateLabel(RimeSessionId session_id,
       .str;
 }
 
+static const char* ReadSwitchText(const an<ConfigItem>& item, size_t index) {
+  if (auto list = As<ConfigList>(item)) {
+    auto value = list->GetValueAt(index);
+    return value ? value->str().c_str() : nullptr;
+  }
+  auto value = index == 0 ? As<ConfigValue>(item) : nullptr;
+  return value ? value->str().c_str() : nullptr;
+}
+
+static Bool RimeGetSwitchGroups(RimeSessionId session_id,
+                                RimeSwitchGroupReceiver receiver,
+                                void* context) {
+  auto session = Service::instance().GetSession(session_id);
+  if (!session || !receiver || !session->schema() ||
+      !session->schema()->config() || !session->context()) {
+    return False;
+  }
+
+  Switches switches(session->schema()->config());
+  size_t previous_index = static_cast<size_t>(-1);
+  switches.FindOption([&](Switches::SwitchOption option) {
+    if (option.switch_index == previous_index)
+      return Switches::kContinue;
+    previous_index = option.switch_index;
+    const auto& config = option.the_switch;
+    const bool is_radio = option.type == Switches::kRadioGroup;
+    const auto options = is_radio ? As<ConfigList>(config->Get("options")) : nullptr;
+    const auto states = config->Get("states");
+    const auto abbrev = config->Get("abbrev");
+
+    RIME_STRUCT(RimeSwitchGroup, group);
+    group.id = option.option_name.c_str();
+    group.title = ReadSwitchText(config->GetValue("title"), 0);
+    group.description = ReadSwitchText(config->GetValue("description"), 0);
+    group.reset = option.reset_value;
+    group.state_count = options ? options->size() : 2;
+    group.selected_index = is_radio ? -1 : session->context()->get_option(group.id);
+
+    vector<const char*> option_names(is_radio ? group.state_count : 0);
+    vector<const char*> state_labels(group.state_count);
+    vector<const char*> state_abbreviations(group.state_count);
+    for (size_t index = 0; index < group.state_count; ++index) {
+      if (options) {
+        auto value = options->GetValueAt(index);
+        option_names[index] = value ? value->str().c_str() : nullptr;
+        if (value && group.selected_index == -1 &&
+            session->context()->get_option(value->str())) {
+          group.selected_index = static_cast<int>(index);
+        }
+      }
+      state_labels[index] = ReadSwitchText(states, index);
+      state_abbreviations[index] = ReadSwitchText(abbrev, index);
+    }
+    group.option_names = is_radio ? option_names.data() : nullptr;
+    group.states = state_labels.data();
+    group.abbrev = state_abbreviations.data();
+    receiver(context, &group);
+    return Switches::kContinue;
+  });
+  return True;
+}
+
 void RimeGetSharedDataDirSecure(char* dir, size_t buffer_size);
 void RimeGetUserDataDirSecure(char* dir, size_t buffer_size);
 void RimeGetPrebuiltDataDirSecure(char* dir, size_t buffer_size);
@@ -1364,6 +1426,7 @@ RIME_API RIME_FLAVORED(RimeApi) * RIME_FLAVORED(rime_get_api)() {
     s_api.compile_config_file = &RimeCompileConfigFile;
     s_api.get_candidate_preview = &RimeGetCandidatePreview;
     s_api.free_candidate_preview = &RimeFreeCandidatePreview;
+    s_api.get_switch_groups = &RimeGetSwitchGroups;
   }
   return &s_api;
 }
