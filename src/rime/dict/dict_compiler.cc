@@ -21,6 +21,7 @@
 #include <rime/dict/prism.h>
 #include <rime/dict/reverse_lookup_dictionary.h>
 #include <rime/dict/table.h>
+#include <rime/dict/user_dict_drop_in.h>
 #include <rime/resource.h>
 #include <rime/service.h>
 
@@ -276,6 +277,25 @@ static uint32_t compute_dict_file_checksum(uint32_t initial_checksum,
   return cc.Checksum();
 }
 
+static void append_extra_dict_files(vector<path>* dict_files,
+                                    const string& dict_name,
+                                    const path& user_data_dir) {
+  for (const auto& extra_file : ListExtraDictFiles(user_data_dir)) {
+    DictSettings extra_settings;
+    if (!load_dict_settings_from_file(&extra_settings, extra_file)) {
+      LOG(WARNING) << "skipping invalid extra dict: " << extra_file;
+      continue;
+    }
+    if (extra_settings.dict_name() == dict_name) {
+      LOG(WARNING) << "skipping extra dict that matches primary dict name: "
+                   << extra_file;
+      continue;
+    }
+    LOG(INFO) << "importing extra dict: " << extra_file;
+    dict_files->push_back(extra_file);
+  }
+}
+
 bool DictCompiler::Compile(const path& schema_file) {
   LOG(INFO) << "compiling dictionary for " << schema_file;
   bool build_table_from_source = true;
@@ -292,6 +312,10 @@ bool DictCompiler::Compile(const path& schema_file) {
   if (!get_dict_files_from_settings(&dict_files, settings,
                                     source_resolver_.get())) {
     return false;
+  }
+  const path& user_data_dir = Service::instance().deployer().user_data_dir;
+  if (enable_drop_in_) {
+    append_extra_dict_files(&dict_files, dict_name_, user_data_dir);
   }
   uint32_t dict_file_checksum =
       compute_dict_file_checksum(0, dict_files, settings);

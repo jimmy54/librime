@@ -61,8 +61,10 @@ endif(build_release)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -c 65001")
 endif()
-# if clang build, use llvm-rc to compile resource file
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+# if clang (GNU driver) build, use llvm-rc to compile resource file;
+# clang-cl（MSVC 前端）沿用 rc.exe——llvm-rc 不认 MSVC 风格 rc 旗标
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+   AND NOT CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
   set(CMAKE_RC_COMPILER "llvm-rc")
   set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -finput-charset=UTF-8")
 endif()

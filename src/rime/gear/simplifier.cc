@@ -96,11 +96,28 @@ void Simplifier::PushBack(const an<Candidate>& original,
                           const string& simplified) {
   string tips;
   string text;
-  size_t length = utf8::unchecked::distance(
-      original->text().c_str(),
-      original->text().c_str() + original->text().length());
-  bool show_tips =
-      (tips_level_ == kTipsChar && length == 1) || tips_level_ == kTipsAll;
+
+  size_t length = 0;
+  bool utf8_ok = true;
+  try {
+    const char* start = original->text().c_str();
+    const char* end = start + original->text().length();
+
+    // 验证UTF-8有效性
+    if (!utf8::is_valid(start, end)) {
+      LOG(ERROR) << "Invalid UTF-8 in candidate text";
+      utf8_ok = false;
+    }
+
+    if (utf8_ok) {
+      length = utf8::distance(start, end);
+    }
+  } catch (const utf8::exception& e) {
+    LOG(ERROR) << "UTF-8 processing error: " << e.what();
+    utf8_ok = false;
+  }
+  bool show_tips = utf8_ok && ((tips_level_ == kTipsChar && length == 1) ||
+                               tips_level_ == kTipsAll);
   if (show_in_comment_) {
     text = original->text();
     if (show_tips) {
@@ -123,6 +140,21 @@ void Simplifier::PushBack(const an<Candidate>& original,
 
 bool Simplifier::Convert(const an<Candidate>& original,
                          CandidateQueue* result) {
+  if (!original) {
+    LOG(ERROR) << "Simplifier::Convert: original candidate is null";
+    return false;
+  }
+
+  if (!opencc_) {
+    LOG(ERROR) << "Simplifier::Convert: opencc is not initialized";
+    return false;
+  }
+
+  if (original->text().empty()) {
+    LOG(WARNING) << "Simplifier::Convert: original text is empty";
+    return false;
+  }
+
   if (excluded_types_.find(original->type()) != excluded_types_.end()) {
     return false;
   }

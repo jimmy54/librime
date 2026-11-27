@@ -86,13 +86,47 @@ bool ConfigData::SaveToFile(const path& file_path) {
   file_path_ = file_path;
   modified_ = false;
   if (file_path.empty()) {
-    // not really saving
+    LOG(ERROR) << "SaveToFile: file path is empty";
     return false;
   }
   LOG(INFO) << "saving config file '" << file_path << "'.";
-  // dump tree
+
+  // check if root node exists
+  if (!root) {
+    LOG(WARNING) << "SaveToFile: root node is null, creating empty map";
+    root = New<ConfigMap>();
+  }
+
+  // ensure parent directory exists
+  auto parent_dir = file_path.parent_path();
+  if (!parent_dir.empty() && !std::filesystem::exists(parent_dir)) {
+    LOG(INFO) << "SaveToFile: creating parent directory: " << parent_dir;
+    try {
+      std::filesystem::create_directories(parent_dir);
+    } catch (const std::exception& e) {
+      LOG(ERROR) << "SaveToFile: failed to create directory " << parent_dir
+                 << ": " << e.what();
+      return false;
+    }
+  }
+
+  // try to open file
   std::ofstream out(file_path.c_str());
-  return SaveToStream(out);
+  if (!out.good()) {
+    LOG(ERROR) << "SaveToFile: failed to open file for writing: " << file_path;
+    return false;
+  }
+
+  bool result = SaveToStream(out);
+  out.close();
+
+  if (result) {
+    LOG(INFO) << "SaveToFile: successfully saved to " << file_path;
+  } else {
+    LOG(ERROR) << "SaveToFile: failed to save to " << file_path;
+  }
+
+  return result;
 }
 
 bool ConfigData::IsListItemReference(const string& key) {
@@ -224,6 +258,11 @@ string ConfigData::JoinPath(const vector<string>& keys) {
 
 an<ConfigItem> ConfigData::Traverse(const string& node_path) {
   DLOG(INFO) << "traverse: " << node_path;
+  if (!root) {
+    LOG(WARNING) << "traverse: root is null, cannot traverse path: "
+                 << node_path;
+    return nullptr;
+  }
   if (node_path.empty() || node_path == "/") {
     return root;
   }
@@ -231,16 +270,16 @@ an<ConfigItem> ConfigData::Traverse(const string& node_path) {
   // find the YAML::Node, and wrap it!
   an<ConfigItem> p = root;
   for (auto it = keys.begin(), end = keys.end(); it != end; ++it) {
-    ConfigItem::ValueType node_type = ConfigItem::kMap;
-    size_t list_index = 0;
-    if (IsListItemReference(*it)) {
-      node_type = ConfigItem::kList;
-      list_index = ResolveListIndex(p, *it, true);
-    }
+    const bool is_list_item = IsListItemReference(*it);
+    const ConfigItem::ValueType node_type =
+        is_list_item ? ConfigItem::kList : ConfigItem::kMap;
+
     if (!p || p->type() != node_type) {
       return nullptr;
     }
-    if (node_type == ConfigItem::kList) {
+
+    if (is_list_item) {
+      size_t list_index = ResolveListIndex(p, *it, true);
       p = As<ConfigList>(p)->GetAt(list_index);
     } else {
       p = As<ConfigMap>(p)->Get(*it);

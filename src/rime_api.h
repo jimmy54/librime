@@ -118,6 +118,8 @@ typedef struct rime_traits_t {
   const char* prebuilt_data_dir;
   //! staging directory. defaults to ${user_data_dir}/build
   const char* staging_dir;
+  //! user profile directory. defaults to ${user_data_dir} if not set
+  const char* user_profile_dir;
 } RimeTraits;
 
 typedef struct {
@@ -191,6 +193,7 @@ typedef struct RIME_FLAVORED(rime_status_t) {
   Bool is_simplified;
   Bool is_traditional;
   Bool is_ascii_punct;
+  Bool is_predicting;
 } RIME_FLAVORED(RimeStatus);
 
 typedef struct rime_candidate_list_iterator_t {
@@ -330,6 +333,17 @@ typedef struct RIME_FLAVORED(rime_api_t) {
   // return True if there is unread commit text
   Bool (*commit_composition)(RimeSessionId session_id);
   void (*clear_composition)(RimeSessionId session_id);
+
+  // context
+
+  //! Set external context text for contextual suggestions
+  //! @param preceding_text: text before cursor position
+  //! @param following_text: text after cursor position
+  Bool (*set_context_text)(RimeSessionId session_id,
+                           const char* preceding_text,
+                           const char* following_text);
+  //! Clear external context text
+  void (*clear_context_text)(RimeSessionId session_id);
 
   // output
 
@@ -519,6 +533,10 @@ typedef struct RIME_FLAVORED(rime_api_t) {
                                               size_t index);
 
   Bool (*change_page)(RimeSessionId session_id, Bool backward);
+
+  Bool (*compile_config_file)(const char* src_path,
+                                const char* dest_path,
+                                const char* file_name);
 
   //! get the preview of committing the highlighted candidate
   Bool (*get_candidate_preview)(RimeSessionId session_id,

@@ -225,9 +225,12 @@ configure_file(
   "${PROJECT_SOURCE_DIR}/src/rime/build_config.h.in"
   "${PROJECT_BINARY_DIR}/src/rime/build_config.h")
 
-include_directories(${PROJECT_BINARY_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(BEFORE ${PROJECT_BINARY_DIR}/src)
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/src)
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/include)
+# Add candidate-action plugin directories for direct include
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/plugins/candidate-action/src)
+include_directories(BEFORE ${PROJECT_SOURCE_DIR}/plugins/candidate-action/include)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
 # keep these variables lest some Rime plugin's cmake file is still using them {

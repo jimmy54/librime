@@ -198,6 +198,7 @@ void ConcreteEngine::OnContextUpdate(Context* ctx) {
   if (!ctx)
     return;
   Compose(ctx);
+  message_sink_("context", "update");
 }
 
 void ConcreteEngine::OnOptionUpdate(Context* ctx, const string& option) {
@@ -328,6 +329,7 @@ void ConcreteEngine::CommitText(string text) {
   FormatText(&text);
   DLOG(INFO) << "committing text: " << text;
   sink_(text);
+  message_sink_("context", "commit");
 }
 
 void ConcreteEngine::OnCommit(Context* ctx) {
@@ -336,6 +338,7 @@ void ConcreteEngine::OnCommit(Context* ctx) {
   FormatText(&text);
   DLOG(INFO) << "committing composition: " << text;
   sink_(text);
+  message_sink_("context", "commit");
 }
 
 void ConcreteEngine::OnSelect(Context* ctx) {
@@ -361,6 +364,7 @@ void ConcreteEngine::OnSelect(Context* ctx) {
       Compose(ctx);
     }
   }
+  message_sink_("context", "select");
 }
 
 void ConcreteEngine::ApplySchema(Schema* schema) {
@@ -620,7 +624,8 @@ void ConcreteEngine::InitializeOptions() {
   Switches switches(config);
   switches.FindOption([this](Switches::SwitchOption option) {
     LOG(INFO) << "found switch option: " << option.option_name
-              << ", reset: " << option.reset_value;
+              << ", reset: " << option.reset_value
+              << ", default: " << option.default_value;
     if (option.reset_value >= 0) {
       if (option.type == Switches::kToggleOption) {
         context_->set_option(option.option_name, (option.reset_value != 0));
@@ -628,6 +633,16 @@ void ConcreteEngine::InitializeOptions() {
         context_->set_option(
             option.option_name,
             static_cast<int>(option.option_index) == option.reset_value);
+      }
+    } else if (option.default_value >= 0 &&
+               context_->options().find(option.option_name) ==
+                   context_->options().end()) {
+      if (option.type == Switches::kToggleOption) {
+        context_->set_option(option.option_name, (option.default_value != 0));
+      } else if (option.type == Switches::kRadioGroup) {
+        context_->set_option(
+            option.option_name,
+            static_cast<int>(option.option_index) == option.default_value);
       }
     }
     return Switches::kContinue;

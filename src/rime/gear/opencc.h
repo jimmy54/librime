@@ -5,7 +5,9 @@
 #ifndef RIME_OPENCC_H_
 #define RIME_OPENCC_H_
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <rime_api.h>
 #include <rime/common.h>
 
@@ -28,7 +30,8 @@ class RIME_DLL Opencc {
  private:
   void Initialize();
 
-  bool initialized_;
+  std::atomic<bool> initialized_;
+  std::mutex init_mutex_;
   path config_path_;
   std::shared_ptr<opencc::Converter> converter_;
   std::shared_ptr<opencc::Dict> dict_;

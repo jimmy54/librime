@@ -50,10 +50,12 @@ class RIME_DLL SchemaUpdate : public DeploymentTask {
   SchemaUpdate(TaskInitializer arg);
   bool Run(Deployer* deployer);
   void set_verbose(bool verbose) { verbose_ = verbose; }
+  void set_enable_drop_in(bool enable) { enable_drop_in_ = enable; }
 
  protected:
   path source_path_;
   bool verbose_ = false;
+  bool enable_drop_in_ = true;
 };
 
 // update a specific config file

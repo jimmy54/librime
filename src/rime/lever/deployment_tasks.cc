@@ -78,7 +78,7 @@ bool DetectModifications::Run(Deployer*) {
 
 bool InstallationUpdate::Run(Deployer* deployer) {
   LOG(INFO) << "updating rime installation info.";
-  const path& user_data_path(deployer->user_data_dir);
+  const path& user_data_path(deployer->user_profile_dir);
   if (!fs::exists(user_data_path)) {
     LOG(INFO) << "creating user data dir: " << user_data_path;
     std::error_code ec;
@@ -632,7 +632,7 @@ bool BackupConfigFiles::Run(Deployer* deployer) {
 
 bool CleanupTrash::Run(Deployer* deployer) {
   LOG(INFO) << "clean up trash.";
-  const path user_data_path(deployer->user_data_dir);
+  const path user_data_path(deployer->user_profile_dir);
   if (!fs::exists(user_data_path))
     return false;
   path trash = user_data_path / "trash";

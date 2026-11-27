@@ -49,6 +49,10 @@ bool Context::IsComposing() const {
   return !input_.empty() || !composition_.empty();
 }
 
+bool Context::IsPredicting() const {
+  return !composition_.empty() && composition_.back().HasTag("prediction");
+}
+
 bool Context::HasMenu() const {
   if (composition_.empty())
     return false;
@@ -328,6 +332,19 @@ Composition::CandidatePreview Context::GetCandidatePreview() const {
   // pass the un-truncated input_ so the preview can include chars past the
   // caret
   return composition_.GetCandidatePreview(input_);
+}
+void Context::set_external_context(const string& preceding_text,
+                                   const string& following_text) {
+  external_preceding_text_ = preceding_text;
+  external_following_text_ = following_text;
+  DLOG(INFO) << "Context::set_external_context: preceding=\"" << preceding_text
+             << "\", following=\"" << following_text << "\"";
+}
+
+void Context::clear_external_context() {
+  external_preceding_text_.clear();
+  external_following_text_.clear();
+  DLOG(INFO) << "Context::clear_external_context";
 }
 
 }  // namespace rime
